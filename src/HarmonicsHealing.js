@@ -4,13 +4,12 @@ export default function HarmonicsHealing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [bgImage, setBgImage] = useState('https://images.unsplash.com/photo-1545389336-cf090694435e?w=1600&q=80');
+  const [bgImage, setBgImage] = useState('https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=1600&q=80');
 
   const backgroundImages = {
-    default: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=1600&q=80',
+    default: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=1600&q=80',
     healing: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1600&q=80',
-    gong: 'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=1600&q=80',
-    about: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=1600&q=80'
+    gong: 'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=1600&q=80'
   };
 
   useEffect(() => {
@@ -28,6 +27,7 @@ export default function HarmonicsHealing() {
               scrollTimeout = setTimeout(() => {
                 setCurrentPage('home');
                 setScrollProgress(0);
+                setBgImage(backgroundImages.default);
               }, 200);
             }
             return newProgress;
@@ -50,6 +50,7 @@ export default function HarmonicsHealing() {
     setMenuOpen(false);
     setCurrentPage(page);
     setScrollProgress(0);
+    setBgImage(backgroundImages.default);
   };
 
   const HeroPage = () => (
@@ -71,7 +72,8 @@ export default function HarmonicsHealing() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         filter: 'brightness(0.7)',
-        transition: 'background-image 0.6s ease'
+        transition: 'opacity 0.8s ease',
+        opacity: 1
       }} />
       <div style={{ textAlign: 'center', color: 'white', zIndex: 2, position: 'relative' }}>
         <h1 style={{
@@ -152,11 +154,9 @@ export default function HarmonicsHealing() {
             }}
             onMouseEnter={(e) => {
               e.target.style.borderBottom = '1px solid white';
-              setBgImage(backgroundImages.about);
             }}
             onMouseLeave={(e) => {
               e.target.style.borderBottom = '1px solid transparent';
-              setBgImage(backgroundImages.default);
             }}
           >
             About Us
