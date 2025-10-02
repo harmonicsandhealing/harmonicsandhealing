@@ -4,6 +4,14 @@ export default function HarmonicsHealing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [bgImage, setBgImage] = useState('https://images.unsplash.com/photo-1545389336-cf090694435e?w=1600&q=80');
+
+  const backgroundImages = {
+    default: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=1600&q=80',
+    healing: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1600&q=80',
+    gong: 'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=1600&q=80',
+    about: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=1600&q=80'
+  };
 
   useEffect(() => {
     let scrollTimeout;
@@ -14,7 +22,7 @@ export default function HarmonicsHealing() {
         
         if (e.deltaY > 0) {
           setScrollProgress(prev => {
-            const newProgress = Math.min(prev + 0.7, 100);
+            const newProgress = Math.min(prev + 0.4, 100);
             if (newProgress === 100) {
               clearTimeout(scrollTimeout);
               scrollTimeout = setTimeout(() => {
@@ -25,7 +33,7 @@ export default function HarmonicsHealing() {
             return newProgress;
           });
         } else if (e.deltaY < 0 && scrollProgress > 0) {
-          setScrollProgress(prev => Math.max(prev - 0.7, 0));
+          setScrollProgress(prev => Math.max(prev - 0.4, 0));
         }
       }
     };
@@ -59,10 +67,11 @@ export default function HarmonicsHealing() {
         left: 0,
         width: '100%',
         height: '100%',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1545389336-cf090694435e?w=1600&q=80)',
+        backgroundImage: `url(${bgImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        filter: 'brightness(0.7)'
+        filter: 'brightness(0.7)',
+        transition: 'background-image 0.6s ease'
       }} />
       <div style={{ textAlign: 'center', color: 'white', zIndex: 2, position: 'relative' }}>
         <h1 style={{
@@ -77,6 +86,8 @@ export default function HarmonicsHealing() {
         <div style={{ display: 'flex', gap: '4rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <a
             onClick={() => navigateToPage('healing')}
+            onMouseEnter={() => setBgImage(backgroundImages.healing)}
+            onMouseLeave={() => setBgImage(backgroundImages.default)}
             style={{
               textDecoration: 'none',
               color: 'white',
@@ -89,8 +100,14 @@ export default function HarmonicsHealing() {
               borderBottom: '1px solid transparent',
               transition: 'all 0.3s ease'
             }}
-            onMouseEnter={(e) => e.target.style.borderBottom = '1px solid white'}
-            onMouseLeave={(e) => e.target.style.borderBottom = '1px solid transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.borderBottom = '1px solid white';
+              setBgImage(backgroundImages.healing);
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderBottom = '1px solid transparent';
+              setBgImage(backgroundImages.default);
+            }}
           >
             Healing Sessions
           </a>
@@ -108,8 +125,14 @@ export default function HarmonicsHealing() {
               borderBottom: '1px solid transparent',
               transition: 'all 0.3s ease'
             }}
-            onMouseEnter={(e) => e.target.style.borderBottom = '1px solid white'}
-            onMouseLeave={(e) => e.target.style.borderBottom = '1px solid transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.borderBottom = '1px solid white';
+              setBgImage(backgroundImages.gong);
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderBottom = '1px solid transparent';
+              setBgImage(backgroundImages.default);
+            }}
           >
             Gong Bath
           </a>
@@ -127,8 +150,14 @@ export default function HarmonicsHealing() {
               borderBottom: '1px solid transparent',
               transition: 'all 0.3s ease'
             }}
-            onMouseEnter={(e) => e.target.style.borderBottom = '1px solid white'}
-            onMouseLeave={(e) => e.target.style.borderBottom = '1px solid transparent'}
+            onMouseEnter={(e) => {
+              e.target.style.borderBottom = '1px solid white';
+              setBgImage(backgroundImages.about);
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderBottom = '1px solid transparent';
+              setBgImage(backgroundImages.default);
+            }}
           >
             About Us
           </a>
@@ -143,52 +172,41 @@ export default function HarmonicsHealing() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden'
+      background: 'white',
+      overflow: 'hidden',
+      padding: '4rem'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1600&q=80)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        filter: 'brightness(0.9)'
-      }} />
       <div style={{ 
-        maxWidth: '850px', 
-        textAlign: 'center', 
-        zIndex: 2, 
-        position: 'relative',
-        background: 'rgba(250, 250, 250, 0.95)',
-        padding: '3rem',
-        borderRadius: '4px'
+        maxWidth: '1200px', 
+        display: 'flex',
+        gap: '4rem',
+        alignItems: 'center'
       }}>
-        <h2 style={{
-          fontSize: '3.5rem',
-          fontWeight: 300,
-          letterSpacing: '4px',
-          marginBottom: '1.5rem',
-          textTransform: 'uppercase',
-          color: '#1a1a1a'
-        }}>
-          Healing Sessions
-        </h2>
-        
-        <p style={{ fontSize: '1.1rem', lineHeight: 1.7, color: '#555', marginBottom: '2rem' }}>
-          Experience transformative healing through sound, energy work, and ancient practices.
-        </p>
-        
         <div style={{
-          display: 'flex',
-          gap: '2rem',
-          justifyContent: 'center',
-          marginTop: '2rem',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ textAlign: 'center', flex: '1', minWidth: '150px', maxWidth: '200px' }}>
+          flex: '1',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          height: '500px',
+          borderRadius: '4px'
+        }} />
+        <div style={{ flex: '1', textAlign: 'left' }}>
+          <h2 style={{
+            fontSize: '3.5rem',
+            fontWeight: 300,
+            letterSpacing: '4px',
+            marginBottom: '2rem',
+            textTransform: 'uppercase',
+            color: '#1a1a1a'
+          }}>
+            Healing Sessions
+          </h2>
+          
+          <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#555', marginBottom: '2rem' }}>
+            Experience transformative healing through sound, energy work, and ancient practices designed to restore balance and harmony.
+          </p>
+          
+          <div style={{ marginBottom: '2rem' }}>
             <h3 style={{
               fontSize: '1.3rem',
               fontWeight: 300,
@@ -197,13 +215,12 @@ export default function HarmonicsHealing() {
               textTransform: 'uppercase',
               color: '#1a1a1a'
             }}>
-              Sound
+              Sound Healing
             </h3>
-            <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: '#666' }}>
-              Therapeutic vibrations
+            <p style={{ fontSize: '1rem', lineHeight: 1.6, color: '#666', marginBottom: '1rem' }}>
+              Therapeutic vibrations for deep relaxation
             </p>
-          </div>
-          <div style={{ textAlign: 'center', flex: '1', minWidth: '150px', maxWidth: '200px' }}>
+            
             <h3 style={{
               fontSize: '1.3rem',
               fontWeight: 300,
@@ -212,13 +229,12 @@ export default function HarmonicsHealing() {
               textTransform: 'uppercase',
               color: '#1a1a1a'
             }}>
-              Energy
+              Energy Work
             </h3>
-            <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: '#666' }}>
-              Restore natural flow
+            <p style={{ fontSize: '1rem', lineHeight: 1.6, color: '#666', marginBottom: '1rem' }}>
+              Restore natural flow of energy
             </p>
-          </div>
-          <div style={{ textAlign: 'center', flex: '1', minWidth: '150px', maxWidth: '200px' }}>
+            
             <h3 style={{
               fontSize: '1.3rem',
               fontWeight: 300,
@@ -227,27 +243,27 @@ export default function HarmonicsHealing() {
               textTransform: 'uppercase',
               color: '#1a1a1a'
             }}>
-              Private
+              Private Sessions
             </h3>
-            <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: '#666' }}>
-              Personalized sessions
+            <p style={{ fontSize: '1rem', lineHeight: 1.6, color: '#666' }}>
+              Personalized healing experiences
             </p>
           </div>
+          
+          <button style={{
+            padding: '1rem 2.5rem',
+            background: '#1a1a1a',
+            color: 'white',
+            fontSize: '0.9rem',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            border: '2px solid #1a1a1a',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}>
+            Book a Session
+          </button>
         </div>
-        <button style={{
-          padding: '1rem 2.5rem',
-          background: '#1a1a1a',
-          color: 'white',
-          fontSize: '0.9rem',
-          letterSpacing: '2px',
-          textTransform: 'uppercase',
-          border: '2px solid #1a1a1a',
-          marginTop: '2rem',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease'
-        }}>
-          Book a Session
-        </button>
       </div>
     </div>
   );
@@ -258,60 +274,56 @@ export default function HarmonicsHealing() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden'
+      background: 'white',
+      overflow: 'hidden',
+      padding: '4rem'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=1600&q=80)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        filter: 'brightness(0.8)'
-      }} />
       <div style={{ 
-        maxWidth: '800px', 
-        textAlign: 'center', 
-        zIndex: 2, 
-        position: 'relative',
-        background: 'rgba(255, 255, 255, 0.95)',
-        padding: '3rem',
-        borderRadius: '4px'
+        maxWidth: '1200px', 
+        display: 'flex',
+        gap: '4rem',
+        alignItems: 'center'
       }}>
-        <h2 style={{
-          fontSize: '3.5rem',
-          fontWeight: 300,
-          letterSpacing: '4px',
-          marginBottom: '1.5rem',
-          textTransform: 'uppercase',
-          color: '#1a1a1a'
-        }}>
-          Gong Bath
-        </h2>
-        <p style={{ fontSize: '1.1rem', lineHeight: 1.7, color: '#555', marginBottom: '1.5rem' }}>
-          Surrender to the profound waves of sound in our signature gong bath experience. The rich, harmonic tones create a deeply meditative state.
-        </p>
-        
-        <p style={{ fontSize: '1.1rem', lineHeight: 1.7, color: '#555', marginBottom: '2rem' }}>
-          Each session guides you through a journey of release, renewal, and restoration.
-        </p>
-        <button style={{
-          padding: '1rem 2.5rem',
-          background: '#1a1a1a',
-          color: 'white',
-          fontSize: '0.9rem',
-          letterSpacing: '2px',
-          textTransform: 'uppercase',
-          border: '2px solid #1a1a1a',
-          marginTop: '1rem',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease'
-        }}>
-          Join a Gong Bath
-        </button>
+        <div style={{ flex: '1', textAlign: 'left' }}>
+          <h2 style={{
+            fontSize: '3.5rem',
+            fontWeight: 300,
+            letterSpacing: '4px',
+            marginBottom: '2rem',
+            textTransform: 'uppercase',
+            color: '#1a1a1a'
+          }}>
+            Gong Bath
+          </h2>
+          <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#555', marginBottom: '1.5rem' }}>
+            Surrender to the profound waves of sound in our signature gong bath experience. The rich, harmonic tones create a deeply meditative state.
+          </p>
+          
+          <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#555', marginBottom: '2rem' }}>
+            Each session guides you through a journey of release, renewal, and restoration. The vibrations penetrate every cell, promoting physical healing while quieting the mind.
+          </p>
+          <button style={{
+            padding: '1rem 2.5rem',
+            background: '#1a1a1a',
+            color: 'white',
+            fontSize: '0.9rem',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            border: '2px solid #1a1a1a',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}>
+            Join a Gong Bath
+          </button>
+        </div>
+        <div style={{
+          flex: '1',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=800&q=80)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          height: '500px',
+          borderRadius: '4px'
+        }} />
       </div>
     </div>
   );
@@ -322,45 +334,42 @@ export default function HarmonicsHealing() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden'
+      background: 'white',
+      overflow: 'hidden',
+      padding: '4rem'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=1600&q=80)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        filter: 'brightness(0.85)'
-      }} />
       <div style={{ 
-        maxWidth: '900px', 
-        textAlign: 'center', 
-        zIndex: 2, 
-        position: 'relative',
-        background: 'rgba(245, 245, 245, 0.95)',
-        padding: '3rem',
-        borderRadius: '4px'
+        maxWidth: '1200px', 
+        display: 'flex',
+        gap: '4rem',
+        alignItems: 'center'
       }}>
-        <h2 style={{
-          fontSize: '3.5rem',
-          fontWeight: 300,
-          letterSpacing: '4px',
-          marginBottom: '1.5rem',
-          textTransform: 'uppercase',
-          color: '#1a1a1a'
-        }}>
-          About Us
-        </h2>
-        <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#555', marginBottom: '1.5rem' }}>
-          Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.
-        </p>
-        <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#555', marginBottom: '1.5rem' }}>
-          With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.
-        </p>
+        <div style={{
+          flex: '1',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&q=80)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          height: '500px',
+          borderRadius: '4px'
+        }} />
+        <div style={{ flex: '1', textAlign: 'left' }}>
+          <h2 style={{
+            fontSize: '3.5rem',
+            fontWeight: 300,
+            letterSpacing: '4px',
+            marginBottom: '2rem',
+            textTransform: 'uppercase',
+            color: '#1a1a1a'
+          }}>
+            About Us
+          </h2>
+          <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#555', marginBottom: '1.5rem' }}>
+            Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.
+          </p>
+          <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: '#555' }}>
+            With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -386,21 +395,21 @@ export default function HarmonicsHealing() {
         <span style={{
           width: '100%',
           height: '2px',
-          background: 'white',
+          background: currentPage === 'home' ? 'white' : '#1a1a1a',
           transform: menuOpen ? 'rotate(45deg) translate(8px, 8px)' : 'none',
           transition: 'all 0.3s ease'
         }} />
         <span style={{
           width: '100%',
           height: '2px',
-          background: 'white',
+          background: currentPage === 'home' ? 'white' : '#1a1a1a',
           opacity: menuOpen ? 0 : 1,
           transition: 'all 0.3s ease'
         }} />
         <span style={{
           width: '100%',
           height: '2px',
-          background: 'white',
+          background: currentPage === 'home' ? 'white' : '#1a1a1a',
           transform: menuOpen ? 'rotate(-45deg) translate(8px, -8px)' : 'none',
           transition: 'all 0.3s ease'
         }} />
