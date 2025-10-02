@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/harmonicsandhealing/static/css/main.af49845c.css",
-    "main.js": "/harmonicsandhealing/static/js/main.8ca1a0e4.js",
+    "main.js": "/harmonicsandhealing/static/js/main.c1eab6c5.js",
     "static/media/gong-bath-new-image-Faith-Earth-at-TL-690x469.jpg": "/harmonicsandhealing/static/media/gong-bath-new-image-Faith-Earth-at-TL-690x469.f423f95ce795081e506f.jpg",
     "static/media/348s.jpg": "/harmonicsandhealing/static/media/348s.38d705fb7328929d7bb7.jpg",
     "index.html": "/harmonicsandhealing/index.html",
     "main.af49845c.css.map": "/harmonicsandhealing/static/css/main.af49845c.css.map",
-    "main.8ca1a0e4.js.map": "/harmonicsandhealing/static/js/main.8ca1a0e4.js.map"
+    "main.c1eab6c5.js.map": "/harmonicsandhealing/static/js/main.c1eab6c5.js.map"
   },
   "entrypoints": [
     "static/css/main.af49845c.css",
-    "static/js/main.8ca1a0e4.js"
+    "static/js/main.c1eab6c5.js"
   ]
 }
