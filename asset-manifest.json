@@ -1,15 +1,10 @@
 {
   "files": {
-    "main.css": "/harmonicsandhealing/static/css/main.65580148.css",
-    "main.js": "/harmonicsandhealing/static/js/main.d475dd20.js",
-    "static/js/453.d4a023e5.chunk.js": "/harmonicsandhealing/static/js/453.d4a023e5.chunk.js",
+    "main.js": "/harmonicsandhealing/static/js/main.082c6c5d.js",
     "index.html": "/harmonicsandhealing/index.html",
-    "main.65580148.css.map": "/harmonicsandhealing/static/css/main.65580148.css.map",
-    "main.d475dd20.js.map": "/harmonicsandhealing/static/js/main.d475dd20.js.map",
-    "453.d4a023e5.chunk.js.map": "/harmonicsandhealing/static/js/453.d4a023e5.chunk.js.map"
+    "main.082c6c5d.js.map": "/harmonicsandhealing/static/js/main.082c6c5d.js.map"
   },
   "entrypoints": [
-    "static/css/main.65580148.css",
-    "static/js/main.d475dd20.js"
+    "static/js/main.082c6c5d.js"
   ]
 }
