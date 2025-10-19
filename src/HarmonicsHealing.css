@@ -1,0 +1,456 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Catchphrase styling */
+.catchphrase {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-Size: clamp(1.3rem, 1.8vw, 5rem);
+    font-Weight: 300;
+    letter-Spacing: 3px;
+    text-Transform: uppercase;
+    overflow: hidden;     /* hide overflow if viewport is very small */
+    text-overflow: ellipsis; /* optional: adds ... if still too long */
+    opacity: 0.9;
+    color: white;
+    z-Index: 10;
+    margin: 0;
+    white-Space: nowrap;
+    padding: 0 2rem;
+    text-Align: center;
+}
+
+/* Hamburger Menu */
+.hamburger {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 2000;
+    cursor: pointer;
+    width: 30px;
+    height: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hamburger span {
+    width: 100%;
+    height: 2px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.hamburger.dark span {
+    background: #1a1a1a;
+}
+
+.hamburger.open span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+.hamburger.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+    transform: rotate(-45deg) translate(8px, -8px);
+}
+
+/* Menu Overlay */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 1500;
+    display: none;
+    align-items: flex-start;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+
+.menu-overlay.active {
+    display: flex;
+    pointer-events: all;
+}
+
+.menu-links {
+    text-align: right;
+    padding-top: 2rem;
+    padding-right: 4.5rem;
+}
+
+.menu-links a {
+    display: block;
+    margin: 0.6rem 0;
+    text-decoration: none;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 300;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.menu-links a:hover {
+    opacity: 0.6;
+}
+
+/* Hero/Home Page */
+.hero {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: brightness(0.7);
+    transition: opacity 0.8s ease;
+}
+
+.hero-content {
+    text-align: center;
+    color: white;
+    z-index: 2;
+    position: relative;
+    padding: 0 2rem;
+}
+
+.hero h1 {
+    font-size: 5rem;
+    font-weight: 300;
+    letter-spacing: 8px;
+    margin-bottom: 3rem;
+    text-transform: uppercase;
+}
+
+.hero-links {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero-links a {
+    text-decoration: none;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.hero-links a:hover {
+    border-bottom: 1px solid white;
+}
+
+/* Section Pages */
+.section-page {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    overflow: hidden;
+    padding: 4rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1;
+    transition: none;
+}
+
+.section-content-wrapper {
+    max-width: 1200px;
+    display: flex;
+    gap: 4rem;
+    align-items: center;
+    width: 100%;
+}
+
+.section-image {
+    flex: 1;
+    height: 500px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 4px;
+}
+
+.section-text {
+    flex: 1;
+    text-align: left;
+}
+
+.section-text h2 {
+    font-size: 3.5rem;
+    font-weight: 300;
+    letter-spacing: 4px;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    color: #1a1a1a;
+}
+
+.section-text p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 1.5rem;
+}
+
+.section-text h3 {
+    font-size: 1.3rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+    text-transform: uppercase;
+    color: #1a1a1a;
+}
+
+.section-text .subtext {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+button {
+    padding: 1rem 2.5rem;
+    background: #1a1a1a;
+    color: white;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 2px solid #1a1a1a;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+button:hover {
+    background: transparent;
+    color: #1a1a1a;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .hero-content p {
+        font-size: 1.1rem !important;
+        letter-spacing: 3px !important;
+    }
+    
+    .hero-links {
+        gap: 2.5rem;
+    }
+    
+    .hero-links a {
+        font-size: 3.5rem !important;
+    }
+    
+    .section-page {
+        padding: 3rem 2rem;
+    }
+    
+    .section-content-wrapper {
+        gap: 3rem;
+    }
+    
+    .section-image {
+        height: 400px;
+    }
+    
+    .section-text h2 {
+        font-size: 2.8rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .hamburger {
+        top: 1.5rem;
+        right: 1.5rem;
+        width: 28px;
+        height: 22px;
+    }
+    
+    .catchphrase {
+        font-size: 0.65rem !important;
+        letter-spacing: 1.5px !important;
+        padding: 0 2rem !important;
+        top: 1.7rem !important;
+    }
+    
+    .hero-content {
+        padding: 0 1.5rem;
+    }
+    
+    .hero-content p {
+        font-size: 0.9rem !important;
+        letter-spacing: 2px !important;
+        margin-bottom: 2vh !important;
+    }
+    
+    .hero-links {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+    }
+    
+    .hero-links a {
+        font-size: 2.5rem !important;
+        white-space: normal !important;
+        text-align: center;
+        line-height: 1.2;
+    }
+    
+    .menu-links a {
+        font-size: 2rem;
+        margin: 1.5rem 0;
+    }
+    
+    .section-page {
+        padding: 2rem 1.5rem;
+        align-items: flex-start;
+        padding-top: 6rem;
+    }
+    
+    .section-content-wrapper {
+        flex-direction: column;
+        gap: 2rem;
+        max-width: 100%;
+    }
+    
+    .section-image {
+        height: 250px;
+        width: 100%;
+    }
+    
+    .section-text {
+        width: 100%;
+    }
+    
+    .section-text h2 {
+        font-size: 2rem;
+        letter-spacing: 2px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-text p {
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .section-text h3 {
+        font-size: 1.1rem;
+        letter-spacing: 1.5px;
+        margin-top: 0.8rem;
+    }
+    
+    .section-text .subtext {
+        font-size: 0.95rem;
+    }
+    
+    button {
+        padding: 0.8rem 2rem;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .hero-content p {
+        font-size: 0.75rem !important;
+        letter-spacing: 1.5px !important;
+    }
+    
+    .hero-links a {
+        font-size: 2rem !important;
+    }
+    
+    .section-text h2 {
+        font-size: 1.6rem;
+    }
+    
+    .section-image {
+        height: 200px;
+    }
+    
+    .menu-links a {
+        font-size: 1.5rem;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+    .hero-content p {
+        font-size: 0.8rem !important;
+        margin-bottom: 1vh !important;
+    }
+    
+    .hero-links {
+        gap: 1rem;
+    }
+    
+    .hero-links a {
+        font-size: 1.8rem !important;
+    }
+    
+    .section-page {
+        padding: 1.5rem;
+        padding-top: 4rem;
+    }
+    
+    .section-image {
+        height: 180px;
+    }
+    
+    .section-text h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .section-text p {
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+    }
+}
