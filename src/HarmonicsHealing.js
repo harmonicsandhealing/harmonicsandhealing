@@ -63,15 +63,16 @@ function HarmonicsHealing() {
   useEffect(() => {
     let touchStartY = 0;
     let touchEndY = 0;
+    let isScrolling = false;
 
     const handleWheel = (e) => {
       if (currentPage !== 'home') {
         e.preventDefault();
         
         if (e.deltaY > 0) {
-          setTargetScroll(prev => Math.min(prev + 10, 120)); // Increased increment and max
+          setTargetScroll(prev => Math.min(prev + 15, 120));
         } else {
-          setTargetScroll(prev => Math.max(prev - 10, 0));
+          setTargetScroll(prev => Math.max(prev - 15, 0));
         }
       }
     };
@@ -79,28 +80,27 @@ function HarmonicsHealing() {
     const handleTouchStart = (e) => {
       if (currentPage !== 'home') {
         touchStartY = e.touches[0].clientY;
+        isScrolling = true;
       }
     };
 
     const handleTouchMove = (e) => {
-      if (currentPage !== 'home') {
+      if (currentPage !== 'home' && isScrolling) {
         e.preventDefault();
         touchEndY = e.touches[0].clientY;
+        
+        // Real-time scroll during touch drag for mobile responsiveness
+        const deltaY = touchStartY - touchEndY;
+        const scrollAmount = deltaY / 10; // Convert pixel movement to scroll progress
+        
+        setTargetScroll(prev => 
+          Math.max(0, Math.min(120, prev + scrollAmount))
+        );
       }
     };
 
     const handleTouchEnd = () => {
-      if (currentPage !== 'home') {
-        const deltaY = touchStartY - touchEndY;
-        
-        if (Math.abs(deltaY) > 10) {
-          if (deltaY > 0) {
-            setTargetScroll(prev => Math.min(prev + 40, 120)); // Increased from 25 to 40, max to 120
-          } else {
-            setTargetScroll(prev => Math.max(prev - 40, 0));
-          }
-        }
-      }
+      isScrolling = false;
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
