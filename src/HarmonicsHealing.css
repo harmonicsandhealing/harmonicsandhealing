@@ -34,21 +34,6 @@ body {
   z-index: -2;
 }
 
-.catchphrase {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2.5rem;
-  font-weight: 300;
-  letter-spacing: 2px;
-  text-align: center;
-  z-index: 10;
-  white-space: normal;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  padding: 0 1rem;
-}
-
 .hero-content {
   position: relative;
   z-index: 100;
@@ -197,7 +182,7 @@ body {
 
 .section-text {
   flex: 1;
-  color: #fff;
+  color: #000;
   padding: 2rem;
   min-width: 0;
 }
@@ -207,6 +192,7 @@ body {
   font-weight: 400;
   margin-bottom: 1rem;
   letter-spacing: 2px;
+  color: #000;
 }
 
 .section-text h3 {
@@ -215,26 +201,29 @@ body {
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
   letter-spacing: 1px;
+  color: #000;
 }
 
 .section-text p {
   font-size: 0.95rem;
   line-height: 1.6;
   margin-bottom: 1rem;
+  color: #000;
 }
 
 .subtext {
   font-size: 0.9rem !important;
   font-style: italic;
-  opacity: 0.9;
+  opacity: 0.7;
+  color: #000;
 }
 
 .section-text button {
   margin-top: 1.5rem;
   padding: 0.75rem 1.5rem;
   font-size: 0.9rem;
-  background: white;
-  color: black;
+  background: #000;
+  color: white;
   border: none;
   cursor: pointer;
   letter-spacing: 1px;
@@ -243,16 +232,11 @@ body {
 }
 
 .section-text button:hover {
-  background: #ccc;
+  background: #333;
 }
 
 /* Mobile Responsive */
 @media (max-width: 1024px) {
-  .catchphrase {
-    font-size: 1.8rem;
-    top: 35%;
-  }
-
   .hero-links a {
     font-size: 1.5rem;
     padding: 0.8rem 1.2rem;
@@ -284,11 +268,6 @@ body {
 }
 
 @media (max-width: 768px) {
-  .catchphrase {
-    font-size: 1.5rem;
-    top: 30%;
-  }
-
   .hero-links {
     gap: 1.5rem;
   }
@@ -325,20 +304,13 @@ body {
 }
 
 @media (max-width: 480px) {
-  /* iPhone 7 and smaller */
+  /* iPhone 7, 16 and smaller */
   body {
     font-size: 14px;
   }
 
   .hero {
     height: 100vh;
-  }
-
-  .catchphrase {
-    font-size: 1.2rem;
-    top: 25%;
-    padding: 0 0.75rem;
-    letter-spacing: 1px;
   }
 
   .hero-links {
@@ -422,26 +394,8 @@ body {
   }
 }
 
-/* Logo positioning for mobile */
-@media (max-width: 480px) {
-  [style*="position: fixed"][style*="top: '2rem'"] {
-    top: 1rem !important;
-    left: 1rem !important;
-  }
-
-  [style*="width: '50px'"] {
-    width: 40px !important;
-    height: 40px !important;
-  }
-}
-
 /* Landscape Mode Support */
 @media (max-height: 500px) {
-  .catchphrase {
-    font-size: 1rem;
-    top: 0.75rem;
-  }
-
   .hero-links {
     gap: 0.5rem;
     padding: 0.5rem 0;
