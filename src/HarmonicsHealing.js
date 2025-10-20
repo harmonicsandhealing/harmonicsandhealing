@@ -93,7 +93,11 @@ function HarmonicsHealing() {
       setTargetScroll(0);
       setCurrentPage(page);
 
-      if (page !== 'home') {
+      if (page === 'home') {
+        // When going home, always use healing background
+        setBgImage(backgroundImages.healing);
+        setDefaultBg(backgroundImages.healing);
+      } else {
         const newBg = backgroundImages[page];
         setDefaultBg(newBg);
         setBgImage(newBg);
