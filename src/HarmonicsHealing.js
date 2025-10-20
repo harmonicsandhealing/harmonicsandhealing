@@ -244,8 +244,10 @@ function HarmonicsHealing() {
           width: '100%', 
           height: '100%', 
           zIndex: 1,
-          transform: `translateY(-${scrollProgress}vh)`,
-          transition: 'transform 0.4s ease-out'
+          opacity: 1 - (scrollProgress / 100),
+          transform: `translateY(0)`,
+          transition: 'opacity 0.4s ease-out',
+          pointerEvents: scrollProgress < 100 ? 'auto' : 'none'
         }}>
           {currentPage === 'healing' && <HealingPage />}
           {currentPage === 'gong' && <GongPage />}
@@ -380,6 +382,7 @@ function HealingPage() {
 // Gong Bath Page
 function GongPage() {
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showContactOptions, setShowContactOptions] = useState(false);
   const phoneNumber = '+1234567890'; // Replace with your actual phone number
   const email = 'your-email@example.com'; // Replace with your actual email
   const whatsappNumber = '+1234567890'; // Replace with your actual WhatsApp number
@@ -388,25 +391,105 @@ function GongPage() {
 
   const handleContactClick = () => {
     if (isMobile()) {
-      // Mobile: show options for WhatsApp, Phone, Email
-      const options = [
-        { label: 'WhatsApp', action: () => window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=Hi, I'm interested in your Gong Bath sessions`) },
-        { label: 'Phone', action: () => window.location.href = `tel:${phoneNumber}` },
-        { label: 'Email', action: () => window.location.href = `mailto:${email}?subject=Gong Bath Inquiry` }
-      ];
-      
-      const choice = prompt('Choose contact method:\n1. WhatsApp\n2. Phone\n3. Email\n\nEnter 1, 2, or 3');
-      if (choice === '1') options[0].action();
-      else if (choice === '2') options[1].action();
-      else if (choice === '3') options[2].action();
+      setShowContactOptions(true);
     } else {
-      // Desktop: show modal
       setShowContactModal(true);
     }
   };
 
+  const handleWhatsApp = () => {
+    window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=Hi, I'm interested in your Gong Bath sessions`);
+    setShowContactOptions(false);
+  };
+
+  const handlePhone = () => {
+    window.location.href = `tel:${phoneNumber}`;
+    setShowContactOptions(false);
+  };
+
+  const handleEmail = () => {
+    window.location.href = `mailto:${email}?subject=Gong Bath Inquiry`;
+    setShowContactOptions(false);
+  };
+
   return (
     <div className="section-page">
+      {showContactOptions && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 5000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '10px',
+            maxWidth: '400px',
+            width: '90%',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ color: '#000', marginBottom: '1.5rem', fontSize: '1.3rem' }}>Contact Me</h3>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem' }}>
+              <button onClick={handleWhatsApp} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#000'
+              }}>
+                <div style={{ fontSize: '2rem' }}>💬</div>
+                <span style={{ fontSize: '0.8rem' }}>WhatsApp</span>
+              </button>
+              <button onClick={handlePhone} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#000'
+              }}>
+                <div style={{ fontSize: '2rem' }}>☎️</div>
+                <span style={{ fontSize: '0.8rem' }}>Phone</span>
+              </button>
+              <button onClick={handleEmail} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#000'
+              }}>
+                <div style={{ fontSize: '2rem' }}>✉️</div>
+                <span style={{ fontSize: '0.8rem' }}>Email</span>
+              </button>
+            </div>
+            <button onClick={() => setShowContactOptions(false)} style={{
+              marginTop: '1.5rem',
+              padding: '0.75rem 2rem',
+              backgroundColor: '#ccc',
+              color: '#000',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}>Close</button>
+          </div>
+        </div>
+      )}
+
       {showContactModal && (
         <div style={{
           position: 'fixed',
