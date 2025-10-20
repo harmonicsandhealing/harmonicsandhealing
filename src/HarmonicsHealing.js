@@ -22,42 +22,10 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Smooth lerp animation - FASTER and goes all the way
+  // Simple scroll animation - just update scrollProgress directly
   useEffect(() => {
-    let animationFrame;
-    
-    const lerp = (start, end, factor) => start + (end - start) * factor;
-    
-    const animate = () => {
-      setScrollProgress(current => {
-        const newValue = lerp(current, targetScroll, 0.15); // Increased from 0.06 for faster animation
-        
-        // Check if we've reached the target
-        if (Math.abs(newValue - targetScroll) < 0.5) {
-          // Return exact target value
-          if (targetScroll >= 300) {
-            setCurrentPage('home');
-            setScrollProgress(0);
-            setTargetScroll(0);
-          }
-          return targetScroll;
-        }
-        
-        animationFrame = requestAnimationFrame(animate);
-        return newValue;
-      });
-    };
-    
-    if (currentPage !== 'home') {
-      animationFrame = requestAnimationFrame(animate);
-    }
-    
-    return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-    };
-  }, [currentPage, targetScroll]);
+    setScrollProgress(targetScroll);
+  }, [targetScroll]);
 
   // Wheel event handler for desktop and touch events for mobile
   useEffect(() => {
@@ -327,8 +295,6 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
         height: '100%',
         zIndex: -1
       }}></div>
-      
-     
       
       <div className="hero-content">
         <div 
