@@ -355,6 +355,10 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
 
 // Healing Sessions Page
 function HealingPage() {
+  const handleBookSession = () => {
+    window.open('https://calendly.com/harmonicsandhealingny', '_blank');
+  };
+
   return (
     <div className="section-page">
       <div className="section-content-wrapper">
@@ -366,7 +370,7 @@ function HealingPage() {
           <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past. The auric field, like a living memory, holds traces of experiences that shape our present reality. As the vibrations bring coherence to this field, tension and stagnation dissolveâ€"awakening clarity, lightness, and a renewed connection to your higher self.</p>
           <h3 style={{ fontSize: '0.95rem' }}>Reiki</h3>
           <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki is a gentle yet powerful form of energy healing that channels universal life force to promote balance and well-being. Through light touch or intention, Reiki harmonizes the body, mind, and spirit, dissolving energetic blockages and restoring natural vitality. It invites deep relaxation, renewal, and a profound sense of peace that radiates from within.</p> 
-          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>Book a Session</button>
+          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }} onClick={handleBookSession}>Book a Session</button>
         </div>
       </div>
     </div>
@@ -375,14 +379,79 @@ function HealingPage() {
 
 // Gong Bath Page
 function GongPage() {
+  const [showContactModal, setShowContactModal] = useState(false);
+  const phoneNumber = '+1234567890'; // Replace with your actual phone number
+  const email = 'your-email@example.com'; // Replace with your actual email
+  const whatsappNumber = '+1234567890'; // Replace with your actual WhatsApp number
+
+  const isMobile = () => /iPhone|iPad|Android/i.test(navigator.userAgent);
+
+  const handleContactClick = () => {
+    if (isMobile()) {
+      // Mobile: show options for WhatsApp, Phone, Email
+      const options = [
+        { label: 'WhatsApp', action: () => window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=Hi, I'm interested in your Gong Bath sessions`) },
+        { label: 'Phone', action: () => window.location.href = `tel:${phoneNumber}` },
+        { label: 'Email', action: () => window.location.href = `mailto:${email}?subject=Gong Bath Inquiry` }
+      ];
+      
+      const choice = prompt('Choose contact method:\n1. WhatsApp\n2. Phone\n3. Email\n\nEnter 1, 2, or 3');
+      if (choice === '1') options[0].action();
+      else if (choice === '2') options[1].action();
+      else if (choice === '3') options[2].action();
+    } else {
+      // Desktop: show modal
+      setShowContactModal(true);
+    }
+  };
+
   return (
     <div className="section-page">
+      {showContactModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 5000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '10px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h3 style={{ color: '#000', marginBottom: '1rem', fontSize: '1.5rem' }}>Get in Touch</h3>
+            <p style={{ color: '#000', marginBottom: '1rem' }}>Send me a message and I'll get back to you soon!</p>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ color: '#000', display: 'block', marginBottom: '0.5rem' }}>Your Email:</label>
+              <input type="email" placeholder="your@email.com" style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '5px', color: '#000' }} />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ color: '#000', display: 'block', marginBottom: '0.5rem' }}>Message:</label>
+              <textarea placeholder="Your message..." style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '5px', color: '#000', minHeight: '100px' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setShowContactModal(false)} style={{ flex: 1, padding: '0.75rem', backgroundColor: '#ccc', color: '#000', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Close</button>
+              <button onClick={() => window.location.href = `mailto:${email}?subject=Contact from Gong Bath Page`} style={{ flex: 1, padding: '0.75rem', backgroundColor: '#000', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Send</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="section-content-wrapper">
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>Gong Bath</h2>
           <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit. Each tone clears stagnant energy, dissolves tension, and invites a deep state of relaxation, guiding you to inner harmony and presence.</p>
           <p style={{ fontSize: '0.85rem', fontStyle:'italic' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." â€" Don Conreaux</p>
-          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>Book a Gong Bath</button>
+          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }} onClick={handleContactClick}>Contact Me</button>
         </div>
         <div className="section-image" style={{ backgroundImage: `url(${gongBg})` }}></div>
       </div>
@@ -392,14 +461,67 @@ function GongPage() {
 
 // About Page
 function AboutPage() {
+  const [showContactModal, setShowContactModal] = useState(false);
+  const email = 'your-email@example.com'; // Replace with your actual email
+
+  const isMobile = () => /iPhone|iPad|Android/i.test(navigator.userAgent);
+
+  const handleContactClick = () => {
+    if (isMobile()) {
+      window.location.href = `mailto:${email}?subject=Contact from About Page`;
+    } else {
+      setShowContactModal(true);
+    }
+  };
+
   return (
     <div className="section-page">
+      {showContactModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 5000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '10px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h3 style={{ color: '#000', marginBottom: '1rem', fontSize: '1.5rem' }}>Get in Touch</h3>
+            <p style={{ color: '#000', marginBottom: '1rem' }}>Send me a message and I'll get back to you soon!</p>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ color: '#000', display: 'block', marginBottom: '0.5rem' }}>Your Email:</label>
+              <input type="email" placeholder="your@email.com" style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '5px', color: '#000' }} />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ color: '#000', display: 'block', marginBottom: '0.5rem' }}>Message:</label>
+              <textarea placeholder="Your message..." style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '5px', color: '#000', minHeight: '100px' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setShowContactModal(false)} style={{ flex: 1, padding: '0.75rem', backgroundColor: '#ccc', color: '#000', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Close</button>
+              <button onClick={() => window.location.href = `mailto:${email}?subject=Contact from About Page`} style={{ flex: 1, padding: '0.75rem', backgroundColor: '#000', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Send</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="section-content-wrapper">
         <div className="section-image" style={{ backgroundImage: `url(${aboutBg})` }}></div>
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>About</h2>
           <p style={{ fontSize: '0.85rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
           <p style={{ fontSize: '0.85rem' }}>With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.</p>
+          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }} onClick={handleContactClick}>Contact Me</button>
         </div>
       </div>
     </div>
