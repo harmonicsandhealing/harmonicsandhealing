@@ -15,6 +15,7 @@ function HarmonicsHealing() {
   const [bgOpacity, setBgOpacity] = useState(1);
   const [fadeOverlay, setFadeOverlay] = useState(0);
   const [defaultBg, setDefaultBg] = useState(healingBg);
+  const [lastVisitedPage, setLastVisitedPage] = useState('about');
 
   const backgroundImages = {
     healing: healingBg,
@@ -72,6 +73,7 @@ function HarmonicsHealing() {
           setTargetScroll(prev => Math.max(prev - 5, 0));
         }
       }
+      // Removed all wheel/scroll handling for home page
     };
 
     const handleTouchStart = (e) => {
@@ -99,6 +101,7 @@ function HarmonicsHealing() {
           }
         }
       }
+      // Removed all touch handling for home page
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
@@ -115,25 +118,29 @@ function HarmonicsHealing() {
   }, [currentPage]);
 
   const navigateToPage = (page) => {
-    setMenuOpen(false);
-    setFadeOverlay(1);
+  setMenuOpen(false);
+  setFadeOverlay(1);
 
-    setTimeout(() => {
-      setScrollProgress(0);
-      setTargetScroll(0);
-      setCurrentPage(page);
+  setTimeout(() => {
+    setScrollProgress(0);
+    setTargetScroll(0);
+    setCurrentPage(page);
 
-      if (page !== 'home') {
-        const newBg = backgroundImages[page];
-        setDefaultBg(newBg);
-        setBgImage(newBg);
-      }
+    if (page !== 'home') {
+      setLastVisitedPage(page); // remember last visited section
+      const newBg = backgroundImages[page];
+      setDefaultBg(newBg);
+      setBgImage(newBg);
+    } 
+    // If page === 'home', just keep current bgImage and defaultBg
 
-      setTimeout(() => setFadeOverlay(0), 50);
-    }, 250);
-  };
+    setTimeout(() => setFadeOverlay(0), 50);
+  }, 250);
+};
+
 
   const handleImageChange = (newImage) => {
+    // Don't change if it's the same as current image (no transition for same image)
     if (newImage === bgImage) return;
     
     setBgOpacity(0);
@@ -144,6 +151,7 @@ function HarmonicsHealing() {
   };
 
   const handleMouseLeave = () => {
+    // Return to default background on mouse leave
     if (bgImage !== defaultBg) {
       setBgOpacity(0);
       setTimeout(() => {
@@ -180,9 +188,9 @@ function HarmonicsHealing() {
       }}
       onClick={() => navigateToPage('home')}
       >
-        <img
-          src={logo}
-          alt="Harmonics and Healing Logo"
+        <img 
+          src={logo} 
+          alt="Harmonics and Healing Logo" 
           style={{
             width: '50px',
             height: '50px',
@@ -192,7 +200,7 @@ function HarmonicsHealing() {
       </div>
 
       {/* Hamburger Menu */}
-      <div
+      <div 
         className={`hamburger ${currentPage !== 'home' ? 'dark' : ''} ${menuOpen ? 'open' : ''}`}
         onClick={() => setMenuOpen(!menuOpen)}
       >
@@ -217,7 +225,7 @@ function HarmonicsHealing() {
             <a href="https://www.instagram.com/harmonicsandhealing/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', margin: '0.6rem 0', letterSpacing: '1.5px' }}>Insta</a>
             <a href="https://www.facebook.com/profile.php?id=61581215911617&ref=_xav_ig_profile_page_web_bt" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', margin: '0.6rem 0', letterSpacing: '1.5px' }}>Facebook</a>
             <a href="https://calendly.com/harmonicsandhealingny" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', margin: '0.6rem 0', letterSpacing: '1.5px' }}>Book Now</a>
-            <button onClick={(e) => { e.preventDefault(); navigateToPage('about'); }} style={{ fontSize: '0.75rem', margin: '0.6rem 0', letterSpacing: '1.5px', background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 0 }}>About</button>
+            <a href="#" onClick={(e) => { e.preventDefault(); navigateToPage('about'); }} style={{ fontSize: '0.75rem', margin: '0.6rem 0', letterSpacing: '1.5px' }}>About</a>
           </div>
         </div>
       )}
@@ -225,25 +233,25 @@ function HarmonicsHealing() {
       {/* Home page background when on section pages */}
       {currentPage !== 'home' && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-          <HeroPage
-            bgImage={bgImage}
-            bgOpacity={bgOpacity}
-            backgroundImages={backgroundImages}
+          <HeroPage 
+            bgImage={bgImage} 
+            bgOpacity={bgOpacity} 
+            backgroundImages={backgroundImages} 
             handleImageChange={handleImageChange}
             handleMouseLeave={handleMouseLeave}
-            navigateToPage={navigateToPage}
+            navigateToPage={navigateToPage} 
           />
         </div>
       )}
 
       {/* Section pages overlay */}
       {currentPage !== 'home' && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
           zIndex: 1,
           transform: `translateY(-${scrollProgress}vh)`,
           transition: 'none'
@@ -256,13 +264,13 @@ function HarmonicsHealing() {
 
       {/* Show home page directly when on home */}
       {currentPage === 'home' && (
-        <HeroPage
-          bgImage={bgImage}
-          bgOpacity={bgOpacity}
-          backgroundImages={backgroundImages}
+        <HeroPage 
+          bgImage={bgImage} 
+          bgOpacity={bgOpacity} 
+          backgroundImages={backgroundImages} 
           handleImageChange={handleImageChange}
           handleMouseLeave={handleMouseLeave}
-          navigateToPage={navigateToPage}
+          navigateToPage={navigateToPage} 
         />
       )}
     </div>
@@ -275,110 +283,85 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
     handleImageChange(backgroundImages[link]);
   };
 
+  // Determine which link is active based on current background
   const getActiveLinkStyle = (linkBg) => {
     return bgImage === linkBg ? { borderBottom: '1px solid white' } : {};
   };
 
   return (
-    <div className="hero" style={{
-      backgroundImage: `url(${bgImage})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed'
-    }}>
-      {/* Dark overlay */}
-      <div style={{
+    <div className="hero">
+      <div className="hero-bg" style={{ 
+        backgroundImage: `url(${bgImage})`,
+        opacity: bgOpacity,
+        transition: 'opacity 0.3s ease',
+        backgroundColor: '#000'
+      }}></div>
+      <div className="hero-bg" style={{ 
+        backgroundImage: `url(${bgImage})`,
+        opacity: 1 - bgOpacity,
+        transition: 'opacity 0.3s ease',
+        backgroundColor: '#000',
         position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',
         height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        zIndex: 1
+        zIndex: -1
       }}></div>
-
+      
       {/* Catchphrase at top */}
-      <p className="catchphrase" style={{
-        position: 'absolute',
-        top: '30%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 10
-      }}>
-        Tuned to Harmony, Healed by Sound...
+      <p className="catchphrase">
+        Tuned to Harmony, Healed by Sound
       </p>
       
-      <div className="hero-content" style={{
-        position: 'relative',
-        zIndex: 100
-      }}>
-        <div
-          className="hero-links"
+      <div className="hero-content">
+        <div 
+          className="hero-links" 
           onMouseLeave={handleMouseLeave}
+          style={{
+            padding: '2rem 4rem',
+            margin: '-2rem -4rem'
+          }}
         >
-          <button
+          <a 
+            href="#" 
             onClick={(e) => { e.preventDefault(); navigateToPage('healing'); }}
             onMouseEnter={() => handleMouseEnter('healing')}
-            style={{
-              fontSize: '2rem',
+            style={{ 
+              fontSize: '2rem', 
               whiteSpace: 'nowrap',
               padding: '1rem 2rem',
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              borderBottom: '1px solid transparent',
-              transition: 'all 0.3s ease',
               ...getActiveLinkStyle(backgroundImages.healing)
             }}
           >
             Healing Sessions
-          </button>
-          <button
+          </a>
+          <a 
+            href="#" 
             onClick={(e) => { e.preventDefault(); navigateToPage('gong'); }}
             onMouseEnter={() => handleMouseEnter('gong')}
-            style={{
-              fontSize: '2rem',
+            style={{ 
+              fontSize: '2rem', 
               whiteSpace: 'nowrap',
               padding: '1rem 2rem',
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              borderBottom: '1px solid transparent',
-              transition: 'all 0.3s ease',
               ...getActiveLinkStyle(backgroundImages.gong)
             }}
           >
             Gong Bath
-          </button>
-          <button
+          </a>
+          <a 
+            href="#" 
             onClick={(e) => { e.preventDefault(); navigateToPage('about'); }}
             onMouseEnter={() => handleMouseEnter('about')}
-            style={{
-              fontSize: '2rem',
+            style={{ 
+              fontSize: '2rem', 
               whiteSpace: 'nowrap',
               padding: '1rem 2rem',
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              borderBottom: '1px solid transparent',
-              transition: 'all 0.3s ease',
               ...getActiveLinkStyle(backgroundImages.about)
             }}
           >
-            About Me
-          </button>
+            About
+          </a>
         </div>
       </div>
     </div>
@@ -393,12 +376,12 @@ function HealingPage() {
         <div className="section-image" style={{ backgroundImage: `url(${healingBg})` }}></div>
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>Healing Sessions</h2>
-          <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intention—one through the flow of universal life force, the other through the resonance of sound within the energy field. Together, they help dissolve energetic blockages, awaken your natural healing capacity, and reconnect you with the calm, luminous presence of your true self.</p>
+          <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intentionâ€”one through the flow of universal life force, the other through the resonance of sound within the energy field. Together, they help dissolve energetic blockages, awaken your natural healing capacity, and reconnect you with the calm, luminous presence of your true self.</p>
           <h3 style={{ fontSize: '0.95rem' }}>Aura Tuning</h3>
-          <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past. The auric field, like a living memory, holds traces of experiences that shape our present reality. As the vibrations bring coherence to this field, tension and stagnation dissolve—awakening clarity, lightness, and a renewed connection to your higher self.</p>
+          <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past. The auric field, like a living memory, holds traces of experiences that shape our present reality. As the vibrations bring coherence to this field, tension and stagnation dissolveâ€”awakening clarity, lightness, and a renewed connection to your higher self.</p>
           <h3 style={{ fontSize: '0.95rem' }}>Reiki</h3>
-          <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki is a gentle yet powerful form of energy healing that channels universal life force to promote balance and well-being. Through light touch or intention, Reiki harmonizes the body, mind, and spirit, dissolving energetic blockages and restoring natural vitality. It invites deep relaxation, renewal, and a profound sense of peace that radiates from within.</p>
-          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }} onClick={() => window.open('https://calendly.com/harmonicsandhealingny', '_blank')}>Book a Session</button>
+          <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki is a gentle yet powerful form of energy healing that channels universal life force to promote balance and well-being. Through light touch or intention, Reiki harmonizes the body, mind, and spirit, dissolving energetic blockages and restoring natural vitality. It invites deep relaxation, renewal, and a profound sense of peace that radiates from within.</p> 
+          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>Book a Session</button>
         </div>
       </div>
     </div>
@@ -413,8 +396,8 @@ function GongPage() {
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>Gong Bath</h2>
           <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit. Each tone clears stagnant energy, dissolves tension, and invites a deep state of relaxation, guiding you to inner harmony and presence.</p>
-          <p style={{ fontSize: '0.85rem', fontStyle:'italic' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." — Don Conreaux</p>
-          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }} onClick={() => window.open('https://calendly.com/harmonicsandhealingny', '_blank')}>Book a Gong Bath</button>
+          <p style={{ fontSize: '0.85rem', fontStyle:'italic' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." â€“ Don Conreaux</p>
+          <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>Book a Gong Bath</button>
         </div>
         <div className="section-image" style={{ backgroundImage: `url(${gongBg})` }}></div>
       </div>
@@ -430,8 +413,8 @@ function AboutPage() {
         <div className="section-image" style={{ backgroundImage: `url(${aboutBg})` }}></div>
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>About</h2>
-          <p style={{ fontSize: '0.95rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
-          <p style={{ fontSize: '0.95rem' }}>With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey towards wholeness and well-being.</p>
+          <p style={{ fontSize: '0.55rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
+          <p style={{ fontSize: '0.55rem' }}>With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.</p>
         </div>
       </div>
     </div>
