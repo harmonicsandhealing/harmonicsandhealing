@@ -1,456 +1,436 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Cormorant Garamond', 'Georgia', serif;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
+  font-family: 'Cormorant Garamond', serif;
+  background-color: #000;
+  color: #fff;
+  overflow: hidden;
 }
 
-/* Catchphrase styling */
+/* Hero Section */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+}
+
 .catchphrase {
-    position: absolute;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-Size: clamp(1.3rem, 1.8vw, 5rem);
-    font-Weight: 300;
-    letter-Spacing: 3px;
-    text-Transform: uppercase;
-    overflow: hidden;     /* hide overflow if viewport is very small */
-    text-overflow: ellipsis; /* optional: adds ... if still too long */
-    opacity: 0.9;
-    color: white;
-    z-Index: 10;
-    margin: 0;
-    white-Space: nowrap;
-    padding: 0 2rem;
-    text-Align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.5rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-align: center;
+  z-index: 10;
+  white-space: normal;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  padding: 0 1rem;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  width: 100%;
+}
+
+.hero-links a {
+  font-size: 2rem;
+  white-space: nowrap;
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s ease;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.hero-links a:hover {
+  border-bottom: 1px solid white;
 }
 
 /* Hamburger Menu */
 .hamburger {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    z-index: 2000;
-    cursor: pointer;
-    width: 30px;
-    height: 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 30px;
+  height: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  z-index: 2001;
 }
 
 .hamburger span {
-    width: 100%;
-    height: 2px;
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.hamburger.dark span {
-    background: #1a1a1a;
+  width: 100%;
+  height: 2px;
+  background-color: white;
+  transition: all 0.3s ease;
 }
 
 .hamburger.open span:nth-child(1) {
-    transform: rotate(45deg) translate(8px, 8px);
+  transform: rotate(45deg) translate(8px, 8px);
 }
 
 .hamburger.open span:nth-child(2) {
-    opacity: 0;
+  opacity: 0;
 }
 
 .hamburger.open span:nth-child(3) {
-    transform: rotate(-45deg) translate(8px, -8px);
+  transform: rotate(-45deg) translate(7px, -7px);
 }
 
 /* Menu Overlay */
 .menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    z-index: 1500;
-    display: none;
-    align-items: flex-start;
-    justify-content: flex-end;
-    pointer-events: none;
-}
-
-.menu-overlay.active {
-    display: flex;
-    pointer-events: all;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-top: 1.5rem;
+  padding-right: 1.5rem;
+  z-index: 1999;
 }
 
 .menu-links {
-    text-align: right;
-    padding-top: 2rem;
-    padding-right: 4.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: right;
+  width: auto;
 }
 
 .menu-links a {
-    display: block;
-    margin: 0.6rem 0;
-    text-decoration: none;
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 300;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity 0.3s ease;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'Cormorant Garamond', serif;
+  transition: opacity 0.3s ease;
 }
 
 .menu-links a:hover {
-    opacity: 0.6;
-}
-
-/* Hero/Home Page */
-.hero {
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    filter: brightness(0.7);
-    transition: opacity 0.8s ease;
-}
-
-.hero-content {
-    text-align: center;
-    color: white;
-    z-index: 2;
-    position: relative;
-    padding: 0 2rem;
-}
-
-.hero h1 {
-    font-size: 5rem;
-    font-weight: 300;
-    letter-spacing: 8px;
-    margin-bottom: 3rem;
-    text-transform: uppercase;
-}
-
-.hero-links {
-    display: flex;
-    gap: 4rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.hero-links a {
-    text-decoration: none;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 300;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.hero-links a:hover {
-    border-bottom: 1px solid white;
+  opacity: 0.7;
 }
 
 /* Section Pages */
 .section-page {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    overflow: hidden;
-    padding: 4rem;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1;
-    transition: none;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  padding: 2rem 0;
 }
 
 .section-content-wrapper {
-    max-width: 1200px;
-    display: flex;
-    gap: 4rem;
-    align-items: center;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 90%;
+  max-width: 1200px;
+  gap: 3rem;
 }
 
 .section-image {
-    flex: 1;
-    height: 500px;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-radius: 4px;
+  flex: 1;
+  height: 400px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px;
+  min-width: 0;
 }
 
 .section-text {
-    flex: 1;
-    text-align: left;
+  flex: 1;
+  color: #fff;
+  padding: 2rem;
+  min-width: 0;
 }
 
 .section-text h2 {
-    font-size: 3.5rem;
-    font-weight: 300;
-    letter-spacing: 4px;
-    margin-bottom: 2rem;
-    text-transform: uppercase;
-    color: #1a1a1a;
-}
-
-.section-text p {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: #555;
-    margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  letter-spacing: 2px;
 }
 
 .section-text h3 {
-    font-size: 1.3rem;
-    font-weight: 300;
-    letter-spacing: 2px;
-    margin-bottom: 0.5rem;
-    margin-top: 1rem;
-    text-transform: uppercase;
-    color: #1a1a1a;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
 }
 
-.section-text .subtext {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #666;
-    margin-bottom: 1rem;
+.section-text p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
 }
 
-button {
-    padding: 1rem 2.5rem;
-    background: #1a1a1a;
-    color: white;
-    font-size: 0.9rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    border: 2px solid #1a1a1a;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 1rem;
+.subtext {
+  font-size: 0.9rem !important;
+  font-style: italic;
+  opacity: 0.9;
 }
 
-button:hover {
-    background: transparent;
-    color: #1a1a1a;
+.section-text button {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  background: white;
+  color: black;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 1px;
+  font-family: 'Cormorant Garamond', serif;
+  transition: all 0.3s ease;
 }
 
-.hidden {
-    display: none;
+.section-text button:hover {
+  background: #ccc;
 }
 
-/* Tablet */
+/* Mobile Responsive */
 @media (max-width: 1024px) {
-    .hero-content p {
-        font-size: 1.1rem !important;
-        letter-spacing: 3px !important;
-    }
-    
-    .hero-links {
-        gap: 2.5rem;
-    }
-    
-    .hero-links a {
-        font-size: 3.5rem !important;
-    }
-    
-    .section-page {
-        padding: 3rem 2rem;
-    }
-    
-    .section-content-wrapper {
-        gap: 3rem;
-    }
-    
-    .section-image {
-        height: 400px;
-    }
-    
-    .section-text h2 {
-        font-size: 2.8rem;
-    }
+  .catchphrase {
+    font-size: 1.8rem;
+    top: 35%;
+  }
+
+  .hero-links a {
+    font-size: 1.5rem;
+    padding: 0.8rem 1.2rem;
+    letter-spacing: 2px;
+  }
+
+  .section-content-wrapper {
+    flex-direction: column;
+    width: 95%;
+    gap: 2rem;
+  }
+
+  .section-image {
+    height: 300px;
+    width: 100%;
+  }
+
+  .section-text {
+    padding: 1.5rem;
+  }
+
+  .section-text h2 {
+    font-size: 1.5rem;
+  }
+
+  .section-text p {
+    font-size: 0.85rem;
+  }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
-    .hamburger {
-        top: 1.5rem;
-        right: 1.5rem;
-        width: 28px;
-        height: 22px;
-    }
-    
-    .catchphrase {
-        font-size: 0.65rem !important;
-        letter-spacing: 1.5px !important;
-        padding: 0 2rem !important;
-        top: 1.7rem !important;
-    }
-    
-    .hero-content {
-        padding: 0 1.5rem;
-    }
-    
-    .hero-content p {
-        font-size: 0.9rem !important;
-        letter-spacing: 2px !important;
-        margin-bottom: 2vh !important;
-    }
-    
-    .hero-links {
-        flex-direction: column;
-        gap: 1.5rem;
-        align-items: center;
-    }
-    
-    .hero-links a {
-        font-size: 2.5rem !important;
-        white-space: normal !important;
-        text-align: center;
-        line-height: 1.2;
-    }
-    
-    .menu-links a {
-        font-size: 2rem;
-        margin: 1.5rem 0;
-    }
-    
-    .section-page {
-        padding: 2rem 1.5rem;
-        align-items: flex-start;
-        padding-top: 6rem;
-    }
-    
-    .section-content-wrapper {
-        flex-direction: column;
-        gap: 2rem;
-        max-width: 100%;
-    }
-    
-    .section-image {
-        height: 250px;
-        width: 100%;
-    }
-    
-    .section-text {
-        width: 100%;
-    }
-    
-    .section-text h2 {
-        font-size: 2rem;
-        letter-spacing: 2px;
-        margin-bottom: 1.5rem;
-    }
-    
-    .section-text p {
-        font-size: 1rem;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-    
-    .section-text h3 {
-        font-size: 1.1rem;
-        letter-spacing: 1.5px;
-        margin-top: 0.8rem;
-    }
-    
-    .section-text .subtext {
-        font-size: 0.95rem;
-    }
-    
-    button {
-        padding: 0.8rem 2rem;
-        font-size: 0.85rem;
-        width: 100%;
-    }
+  .catchphrase {
+    font-size: 1.5rem;
+    top: 30%;
+  }
+
+  .hero-links {
+    gap: 1.5rem;
+  }
+
+  .hero-links a {
+    font-size: 1.2rem;
+    padding: 0.7rem 1rem;
+    letter-spacing: 1.5px;
+  }
+
+  .section-image {
+    height: 250px;
+  }
+
+  .section-text h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .section-text h3 {
+    font-size: 0.95rem;
+    margin-top: 1rem;
+  }
+
+  .section-text p {
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .section-text button {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.8rem;
+  }
 }
 
-/* Small Mobile */
 @media (max-width: 480px) {
-    .hero-content p {
-        font-size: 0.75rem !important;
-        letter-spacing: 1.5px !important;
-    }
-    
-    .hero-links a {
-        font-size: 2rem !important;
-    }
-    
-    .section-text h2 {
-        font-size: 1.6rem;
-    }
-    
-    .section-image {
-        height: 200px;
-    }
-    
-    .menu-links a {
-        font-size: 1.5rem;
-    }
+  /* iPhone 7 and smaller */
+  body {
+    font-size: 14px;
+  }
+
+  .hero {
+    height: 100vh;
+  }
+
+  .catchphrase {
+    font-size: 1.2rem;
+    top: 25%;
+    padding: 0 0.75rem;
+    letter-spacing: 1px;
+  }
+
+  .hero-links {
+    gap: 1rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .hero-links a {
+    font-size: 1rem;
+    padding: 0.6rem 0.8rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: normal;
+    max-width: 280px;
+  }
+
+  .hamburger {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .menu-overlay {
+    padding-top: 1rem;
+    padding-right: 1rem;
+  }
+
+  .menu-links {
+    gap: 1rem;
+  }
+
+  .menu-links a {
+    font-size: 0.7rem;
+  }
+
+  .section-page {
+    padding: 1rem 0;
+    min-height: auto;
+  }
+
+  .section-content-wrapper {
+    flex-direction: column;
+    width: 95%;
+    gap: 1.5rem;
+  }
+
+  .section-image {
+    height: 200px;
+    width: 100%;
+  }
+
+  .section-text {
+    padding: 1rem;
+  }
+
+  .section-text h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.6rem;
+    letter-spacing: 1px;
+  }
+
+  .section-text h3 {
+    font-size: 0.9rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .section-text p {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    margin-bottom: 0.8rem;
+  }
+
+  .subtext {
+    font-size: 0.7rem !important;
+  }
+
+  .section-text button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
 }
 
-/* Landscape Mobile */
-@media (max-height: 600px) and (orientation: landscape) {
-    .hero-content p {
-        font-size: 0.8rem !important;
-        margin-bottom: 1vh !important;
-    }
-    
-    .hero-links {
-        gap: 1rem;
-    }
-    
-    .hero-links a {
-        font-size: 1.8rem !important;
-    }
-    
-    .section-page {
-        padding: 1.5rem;
-        padding-top: 4rem;
-    }
-    
-    .section-image {
-        height: 180px;
-    }
-    
-    .section-text h2 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .section-text p {
-        font-size: 0.9rem;
-        margin-bottom: 0.8rem;
-    }
+/* Logo positioning for mobile */
+@media (max-width: 480px) {
+  [style*="position: fixed"][style*="top: '2rem'"] {
+    top: 1rem !important;
+    left: 1rem !important;
+  }
+
+  [style*="width: '50px'"] {
+    width: 40px !important;
+    height: 40px !important;
+  }
 }
