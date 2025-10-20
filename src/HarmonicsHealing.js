@@ -382,7 +382,7 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
               ...getActiveLinkStyle(backgroundImages.about)
             }}
           >
-            About
+            About Me
           </button>
         </div>
       </div>
