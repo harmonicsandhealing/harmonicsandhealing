@@ -15,7 +15,6 @@ function HarmonicsHealing() {
   const [bgOpacity, setBgOpacity] = useState(1);
   const [fadeOverlay, setFadeOverlay] = useState(0);
   const [defaultBg, setDefaultBg] = useState(healingBg);
-  const [lastVisitedPage, setLastVisitedPage] = useState('about');
 
   const backgroundImages = {
     healing: healingBg,
@@ -23,7 +22,7 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Smooth lerp animation
+  // Smooth lerp animation - FASTER and goes all the way
   useEffect(() => {
     let animationFrame;
     
@@ -31,9 +30,11 @@ function HarmonicsHealing() {
     
     const animate = () => {
       setScrollProgress(current => {
-        const newValue = lerp(current, targetScroll, 0.06);
+        const newValue = lerp(current, targetScroll, 0.15); // Increased from 0.06 for faster animation
         
-        if (Math.abs(newValue - targetScroll) < 0.01) {
+        // Check if we've reached the target
+        if (Math.abs(newValue - targetScroll) < 0.5) {
+          // Return exact target value
           if (targetScroll >= 100) {
             setCurrentPage('home');
             setScrollProgress(0);
@@ -68,12 +69,11 @@ function HarmonicsHealing() {
         e.preventDefault();
         
         if (e.deltaY > 0) {
-          setTargetScroll(prev => Math.min(prev + 5, 100));
+          setTargetScroll(prev => Math.min(prev + 10, 120)); // Increased increment and max
         } else {
-          setTargetScroll(prev => Math.max(prev - 5, 0));
+          setTargetScroll(prev => Math.max(prev - 10, 0));
         }
       }
-      // Removed all wheel/scroll handling for home page
     };
 
     const handleTouchStart = (e) => {
@@ -95,13 +95,12 @@ function HarmonicsHealing() {
         
         if (Math.abs(deltaY) > 10) {
           if (deltaY > 0) {
-            setTargetScroll(prev => Math.min(prev + 25, 100));
+            setTargetScroll(prev => Math.min(prev + 40, 120)); // Increased from 25 to 40, max to 120
           } else {
-            setTargetScroll(prev => Math.max(prev - 25, 0));
+            setTargetScroll(prev => Math.max(prev - 40, 0));
           }
         }
       }
-      // Removed all touch handling for home page
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
@@ -118,29 +117,25 @@ function HarmonicsHealing() {
   }, [currentPage]);
 
   const navigateToPage = (page) => {
-  setMenuOpen(false);
-  setFadeOverlay(1);
+    setMenuOpen(false);
+    setFadeOverlay(1);
 
-  setTimeout(() => {
-    setScrollProgress(0);
-    setTargetScroll(0);
-    setCurrentPage(page);
+    setTimeout(() => {
+      setScrollProgress(0);
+      setTargetScroll(0);
+      setCurrentPage(page);
 
-    if (page !== 'home') {
-      setLastVisitedPage(page); // remember last visited section
-      const newBg = backgroundImages[page];
-      setDefaultBg(newBg);
-      setBgImage(newBg);
-    } 
-    // If page === 'home', just keep current bgImage and defaultBg
+      if (page !== 'home') {
+        const newBg = backgroundImages[page];
+        setDefaultBg(newBg);
+        setBgImage(newBg);
+      }
 
-    setTimeout(() => setFadeOverlay(0), 50);
-  }, 250);
-};
-
+      setTimeout(() => setFadeOverlay(0), 50);
+    }, 250);
+  };
 
   const handleImageChange = (newImage) => {
-    // Don't change if it's the same as current image (no transition for same image)
     if (newImage === bgImage) return;
     
     setBgOpacity(0);
@@ -151,7 +146,6 @@ function HarmonicsHealing() {
   };
 
   const handleMouseLeave = () => {
-    // Return to default background on mouse leave
     if (bgImage !== defaultBg) {
       setBgOpacity(0);
       setTimeout(() => {
@@ -283,7 +277,6 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
     handleImageChange(backgroundImages[link]);
   };
 
-  // Determine which link is active based on current background
   const getActiveLinkStyle = (linkBg) => {
     return bgImage === linkBg ? { borderBottom: '1px solid white' } : {};
   };
@@ -376,9 +369,9 @@ function HealingPage() {
         <div className="section-image" style={{ backgroundImage: `url(${healingBg})` }}></div>
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>Healing Sessions</h2>
-          <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intentionâ€”one through the flow of universal life force, the other through the resonance of sound within the energy field. Together, they help dissolve energetic blockages, awaken your natural healing capacity, and reconnect you with the calm, luminous presence of your true self.</p>
+          <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intentionâ€"one through the flow of universal life force, the other through the resonance of sound within the energy field. Together, they help dissolve energetic blockages, awaken your natural healing capacity, and reconnect you with the calm, luminous presence of your true self.</p>
           <h3 style={{ fontSize: '0.95rem' }}>Aura Tuning</h3>
-          <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past. The auric field, like a living memory, holds traces of experiences that shape our present reality. As the vibrations bring coherence to this field, tension and stagnation dissolveâ€”awakening clarity, lightness, and a renewed connection to your higher self.</p>
+          <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past. The auric field, like a living memory, holds traces of experiences that shape our present reality. As the vibrations bring coherence to this field, tension and stagnation dissolveâ€"awakening clarity, lightness, and a renewed connection to your higher self.</p>
           <h3 style={{ fontSize: '0.95rem' }}>Reiki</h3>
           <p className="subtext" style={{ fontSize: '0.85rem', textAlign:'justify' }}>Reiki is a gentle yet powerful form of energy healing that channels universal life force to promote balance and well-being. Through light touch or intention, Reiki harmonizes the body, mind, and spirit, dissolving energetic blockages and restoring natural vitality. It invites deep relaxation, renewal, and a profound sense of peace that radiates from within.</p> 
           <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>Book a Session</button>
@@ -396,7 +389,7 @@ function GongPage() {
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>Gong Bath</h2>
           <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit. Each tone clears stagnant energy, dissolves tension, and invites a deep state of relaxation, guiding you to inner harmony and presence.</p>
-          <p style={{ fontSize: '0.85rem', fontStyle:'italic' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." â€“ Don Conreaux</p>
+          <p style={{ fontSize: '0.85rem', fontStyle:'italic' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." â€" Don Conreaux</p>
           <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>Book a Gong Bath</button>
         </div>
         <div className="section-image" style={{ backgroundImage: `url(${gongBg})` }}></div>
@@ -413,8 +406,8 @@ function AboutPage() {
         <div className="section-image" style={{ backgroundImage: `url(${aboutBg})` }}></div>
         <div className="section-text">
           <h2 style={{ fontSize: '1.75rem' }}>About</h2>
-          <p style={{ fontSize: '0.55rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
-          <p style={{ fontSize: '0.55rem' }}>With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.</p>
+          <p style={{ fontSize: '0.85rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
+          <p style={{ fontSize: '0.85rem' }}>With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.</p>
         </div>
       </div>
     </div>
