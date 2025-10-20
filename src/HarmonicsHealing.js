@@ -22,9 +22,24 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Simple scroll animation - just update scrollProgress directly
+  // Smooth scroll animation with requestAnimationFrame
   useEffect(() => {
-    setScrollProgress(targetScroll);
+    let animationFrame;
+    
+    const animate = () => {
+      setScrollProgress(current => {
+        const diff = targetScroll - current;
+        if (Math.abs(diff) < 0.5) {
+          return targetScroll;
+        }
+        return current + diff * 0.15;
+      });
+      animationFrame = requestAnimationFrame(animate);
+    };
+    
+    animationFrame = requestAnimationFrame(animate);
+    
+    return () => cancelAnimationFrame(animationFrame);
   }, [targetScroll]);
 
   // Wheel event handler for desktop and touch events for mobile
@@ -244,10 +259,8 @@ function HarmonicsHealing() {
           width: '100%', 
           height: '100%', 
           zIndex: 1,
-          opacity: 1 - (scrollProgress / 100),
-          transform: `translateY(0)`,
-          transition: 'opacity 0.4s ease-out',
-          pointerEvents: scrollProgress < 100 ? 'auto' : 'none'
+          transform: `translateY(-${scrollProgress}vh)`,
+          transition: 'transform 0.4s ease-out'
         }}>
           {currentPage === 'healing' && <HealingPage />}
           {currentPage === 'gong' && <GongPage />}
