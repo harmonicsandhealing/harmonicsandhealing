@@ -242,7 +242,7 @@ function HarmonicsHealing() {
           height: '100%', 
           zIndex: 1,
           transform: `translateY(-${scrollProgress}vh)`,
-          transition: 'transform 0.1s ease-out'
+          transition: 'transform 0.4s ease-out'
         }}>
           {currentPage === 'healing' && <HealingPage />}
           {currentPage === 'gong' && <GongPage />}
