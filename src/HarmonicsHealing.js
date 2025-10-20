@@ -171,10 +171,10 @@ function HarmonicsHealing() {
         pointerEvents: fadeOverlay > 0 ? 'all' : 'none'
       }}></div>
 
-      {/* Catchphrase - Fixed at top center */}
+      {/* Catchphrase - Fixed at top center, same level as logo */}
       <div style={{
         position: 'fixed',
-        top: '1.5rem',
+        top: '1rem',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 2000,
@@ -186,7 +186,10 @@ function HarmonicsHealing() {
         textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
         padding: '0 1rem',
         whiteSpace: 'normal',
-        maxWidth: '70%'
+        maxWidth: '70%',
+        display: 'flex',
+        alignItems: 'center',
+        height: '50px'
       }}>
         Tuned to Harmony, Healed by Sound
       </div>
@@ -194,11 +197,14 @@ function HarmonicsHealing() {
       {/* Logo in upper left corner */}
       <div style={{
         position: 'fixed',
-        top: '2rem',
+        top: '1rem',
         left: '2rem',
         zIndex: 2000,
         opacity: 0.5,
-        cursor: 'pointer'
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        height: '50px'
       }}
       onClick={() => navigateToPage('home')}
       >
@@ -322,7 +328,10 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
         zIndex: -1
       }}></div>
       
-    
+      {/* Catchphrase at top */}
+      <p className="catchphrase">
+        Tuned to Harmony, Healed by Sound
+      </p>
       
       <div className="hero-content">
         <div 
