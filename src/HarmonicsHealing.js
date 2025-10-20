@@ -11,6 +11,7 @@ function HarmonicsHealing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [targetScroll, setTargetScroll] = useState(0);
+  const [showContactIcons, setShowContactIcons] = useState(false);
   const [bgImage, setBgImage] = useState(healingBg);
   const [bgOpacity, setBgOpacity] = useState(1);
   const [fadeOverlay, setFadeOverlay] = useState(0);
@@ -250,7 +251,7 @@ function HarmonicsHealing() {
         </div>
       )}
 
-      {/* Section pages overlay */}
+      {/* Section pages overlay - fade in on entry, parallax on scroll */}
       {currentPage !== 'home' && (
         <div style={{ 
           position: 'fixed', 
@@ -259,8 +260,9 @@ function HarmonicsHealing() {
           width: '100%', 
           height: '100%', 
           zIndex: 1,
-          transform: `translateY(-${scrollProgress}vh)`,
-          transition: 'transform 0.4s ease-out'
+          transform: `translateY(${Math.max(0, scrollProgress - 1)}vh)`,
+          transition: 'transform 0.4s ease-out',
+          opacity: scrollProgress < 1 ? 1 : 1
         }}>
           {currentPage === 'healing' && <HealingPage />}
           {currentPage === 'gong' && <GongPage />}
@@ -395,114 +397,35 @@ function HealingPage() {
 // Gong Bath Page
 function GongPage() {
   const [showContactModal, setShowContactModal] = useState(false);
-  const [showContactOptions, setShowContactOptions] = useState(false);
-  const phoneNumber = '+1234567890'; // Replace with your actual phone number
+  const [showContactIcons, setShowContactIcons] = useState(false);
   const email = 'your-email@example.com'; // Replace with your actual email
   const whatsappNumber = '+1234567890'; // Replace with your actual WhatsApp number
+  const phoneNumber = '+1234567890'; // Replace with your actual phone number
+
+  const handleWhatsApp = () => {
+    window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=Hi, I'm interested in your Gong Bath sessions`);
+  };
+
+  const handlePhone = () => {
+    window.location.href = `tel:${phoneNumber}`;
+  };
+
+  const handleEmail = () => {
+    window.location.href = `mailto:${email}?subject=Gong Bath Inquiry`;
+  };
 
   const isMobile = () => /iPhone|iPad|Android/i.test(navigator.userAgent);
 
   const handleContactClick = () => {
     if (isMobile()) {
-      setShowContactOptions(true);
+      setShowContactIcons(!showContactIcons);
     } else {
       setShowContactModal(true);
     }
   };
 
-  const handleWhatsApp = () => {
-    window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=Hi, I'm interested in your Gong Bath sessions`);
-    setShowContactOptions(false);
-  };
-
-  const handlePhone = () => {
-    window.location.href = `tel:${phoneNumber}`;
-    setShowContactOptions(false);
-  };
-
-  const handleEmail = () => {
-    window.location.href = `mailto:${email}?subject=Gong Bath Inquiry`;
-    setShowContactOptions(false);
-  };
-
   return (
     <div className="section-page">
-      {showContactOptions && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 5000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '10px',
-            maxWidth: '400px',
-            width: '90%',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ color: '#000', marginBottom: '1.5rem', fontSize: '1.3rem' }}>Contact Me</h3>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem' }}>
-              <button onClick={handleWhatsApp} style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#000'
-              }}>
-                <div style={{ fontSize: '2rem' }}>💬</div>
-                <span style={{ fontSize: '0.8rem' }}>WhatsApp</span>
-              </button>
-              <button onClick={handlePhone} style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#000'
-              }}>
-                <div style={{ fontSize: '2rem' }}>☎️</div>
-                <span style={{ fontSize: '0.8rem' }}>Phone</span>
-              </button>
-              <button onClick={handleEmail} style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#000'
-              }}>
-                <div style={{ fontSize: '2rem' }}>✉️</div>
-                <span style={{ fontSize: '0.8rem' }}>Email</span>
-              </button>
-            </div>
-            <button onClick={() => setShowContactOptions(false)} style={{
-              marginTop: '1.5rem',
-              padding: '0.75rem 2rem',
-              backgroundColor: '#ccc',
-              color: '#000',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}>Close</button>
-          </div>
-        </div>
-      )}
-
       {showContactModal && (
         <div style={{
           position: 'fixed',
@@ -548,6 +471,58 @@ function GongPage() {
           <p style={{ fontSize: '0.85rem', textAlign:'justify' }}>Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit. Each tone clears stagnant energy, dissolves tension, and invites a deep state of relaxation, guiding you to inner harmony and presence.</p>
           <p style={{ fontSize: '0.85rem', fontStyle:'italic' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." â€" Don Conreaux</p>
           <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }} onClick={handleContactClick}>Contact Me</button>
+          
+          {showContactIcons && (
+            <div style={{
+              marginTop: '1rem',
+              padding: '1rem',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '8px',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '1.5rem'
+            }}>
+              <button onClick={handleWhatsApp} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#000'
+              }}>
+                <div style={{ fontSize: '2.5rem' }}>💬</div>
+                <span style={{ fontSize: '0.75rem' }}>WhatsApp</span>
+              </button>
+              <button onClick={handlePhone} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#000'
+              }}>
+                <div style={{ fontSize: '2.5rem' }}>☎️</div>
+                <span style={{ fontSize: '0.75rem' }}>Phone</span>
+              </button>
+              <button onClick={handleEmail} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#000'
+              }}>
+                <div style={{ fontSize: '2.5rem' }}>✉️</div>
+                <span style={{ fontSize: '0.75rem' }}>Email</span>
+              </button>
+            </div>
+          )}
         </div>
         <div className="section-image" style={{ backgroundImage: `url(${gongBg})` }}></div>
       </div>
