@@ -309,7 +309,7 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
       
       {/* Catchphrase at top */}
       <p className="catchphrase">
-        Tuned to Harmony, Healed by Sound
+        Tuned to Harmony, Healed by Sound...
       </p>
       
       <div className="hero-content">
