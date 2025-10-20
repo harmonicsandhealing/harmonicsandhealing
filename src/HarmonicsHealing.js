@@ -35,7 +35,7 @@ function HarmonicsHealing() {
         // Check if we've reached the target
         if (Math.abs(newValue - targetScroll) < 0.5) {
           // Return exact target value
-          if (targetScroll >= 100) {
+          if (targetScroll >= 300) {
             setCurrentPage('home');
             setScrollProgress(0);
             setTargetScroll(0);
@@ -328,10 +328,7 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, han
         zIndex: -1
       }}></div>
       
-      {/* Catchphrase at top */}
-      <p className="catchphrase">
-        Tuned to Harmony, Healed by Sound
-      </p>
+     
       
       <div className="hero-content">
         <div 
