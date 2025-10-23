@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Import images
 import healingBg from './assets/healing/tuning-fork-2.jpg';
@@ -7,60 +7,119 @@ import gongBg from './assets/gong/gong_bath.jpg';
 import logo from './assets/logo/logo.jpg';
 
 function HarmonicsHealing() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [targetScroll, setTargetScroll] = useState(0);
   const [bgImage, setBgImage] = useState(healingBg);
   const [bgOpacity, setBgOpacity] = useState(1);
-  const containerRef = useRef(null);
+  const [fadeOverlay, setFadeOverlay] = useState(0);
+  const [defaultBg, setDefaultBg] = useState(healingBg);
 
-  const pages = [
-    { name: 'home', bg: healingBg },
-    { name: 'healing', bg: healingBg },
-    { name: 'gong', bg: gongBg },
-    { name: 'about', bg: aboutBg }
-  ];
+  const backgroundImages = {
+    healing: healingBg,
+    gong: gongBg,
+    about: aboutBg
+  };
 
+  // Smooth scroll animation
   useEffect(() => {
-    const handleWheel = (e) => {
-      if (e.deltaY > 0) {
-        setCurrentIndex(prev => Math.min(prev + 1, pages.length - 1));
-      } else {
-        setCurrentIndex(prev => Math.max(prev - 1, 0));
-      }
+    let animationFrame;
+    
+    const animate = () => {
+      setScrollProgress(current => {
+        const diff = targetScroll - current;
+        if (Math.abs(diff) < 0.5) {
+          return targetScroll;
+        }
+        return current + diff * 0.1;
+      });
+      animationFrame = requestAnimationFrame(animate);
     };
+    
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [targetScroll]);
 
+  // Touch and wheel handlers
+  useEffect(() => {
     let touchStartY = 0;
-    const handleTouchStart = (e) => {
-      touchStartY = e.touches[0].clientY;
-    };
+    let touchEndY = 0;
 
-    const handleTouchEnd = (e) => {
-      const touchEndY = e.changedTouches[0].clientY;
-      const diff = touchStartY - touchEndY;
-      
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) {
-          setCurrentIndex(prev => Math.min(prev + 1, pages.length - 1));
+    const handleWheel = (e) => {
+      if (currentPage !== 'home') {
+        e.preventDefault();
+        if (e.deltaY > 0) {
+          setTargetScroll(prev => Math.min(prev + 10, 300));
         } else {
-          setCurrentIndex(prev => Math.max(prev - 1, 0));
+          setTargetScroll(prev => Math.max(prev - 10, 0));
         }
       }
     };
 
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    const handleTouchStart = (e) => {
+      if (currentPage !== 'home') {
+        touchStartY = e.touches[0].clientY;
+      }
+    };
 
+    const handleTouchMove = (e) => {
+      if (currentPage !== 'home') {
+        e.preventDefault();
+        touchEndY = e.touches[0].clientY;
+        const deltaY = touchStartY - touchEndY;
+        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY * 0.5)));
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchStartY = 0;
+      touchEndY = 0;
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [currentPage]);
 
+  // Check if scrolled all the way back to home
   useEffect(() => {
-    setBgImage(pages[currentIndex].bg);
-  }, [currentIndex]);
+    if (currentPage !== 'home' && scrollProgress >= 300) {
+      setCurrentPage('home');
+      setScrollProgress(0);
+      setTargetScroll(0);
+    }
+  }, [scrollProgress, currentPage]);
+
+  const navigateToPage = (page) => {
+    setMenuOpen(false);
+    setFadeOverlay(1);
+
+    setTimeout(() => {
+      setScrollProgress(0);
+      setTargetScroll(0);
+      setCurrentPage(page);
+
+      if (page === 'home') {
+        setBgImage(backgroundImages.healing);
+        setDefaultBg(backgroundImages.healing);
+      } else if (page !== 'home') {
+        const newBg = backgroundImages[page];
+        setDefaultBg(newBg);
+        setBgImage(newBg);
+      }
+
+      setTimeout(() => setFadeOverlay(0), 50);
+    }, 250);
+  };
 
   const handleImageChange = (newImage) => {
     if (newImage === bgImage) return;
@@ -71,20 +130,33 @@ function HarmonicsHealing() {
     }, 150);
   };
 
-  const navigateToPage = (index) => {
-    setMenuOpen(false);
-    setCurrentIndex(index);
-  };
-
-  const backgroundImages = {
-    healing: healingBg,
-    gong: gongBg,
-    about: aboutBg
+  const handleMouseLeave = () => {
+    if (bgImage !== defaultBg) {
+      setBgOpacity(0);
+      setTimeout(() => {
+        setBgImage(defaultBg);
+        setTimeout(() => setBgOpacity(1), 5);
+      }, 150);
+    }
   };
 
   return (
-    <div ref={containerRef} style={{ overflow: 'hidden', height: '100vh', position: 'relative' }}>
-      {/* Fixed catchphrase */}
+    <div>
+      {/* Fade Overlay */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'white',
+        opacity: fadeOverlay,
+        transition: 'opacity 0.25s ease',
+        zIndex: 3000,
+        pointerEvents: fadeOverlay > 0 ? 'all' : 'none'
+      }}></div>
+
+      {/* Catchphrase */}
       <div style={{
         position: 'fixed',
         top: '1rem',
@@ -113,7 +185,7 @@ function HarmonicsHealing() {
         opacity: 0.5,
         cursor: 'pointer'
       }}
-      onClick={() => navigateToPage(0)}
+      onClick={() => navigateToPage('home')}
       >
         <img 
           src={logo} 
@@ -168,30 +240,59 @@ function HarmonicsHealing() {
             <a href="https://www.instagram.com/harmonicsandhealing/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'white', textDecoration: 'none', letterSpacing: '1.5px' }}>Insta</a>
             <a href="https://www.facebook.com/profile.php?id=61581215911617&ref=_xav_ig_profile_page_web_bt" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'white', textDecoration: 'none', letterSpacing: '1.5px' }}>Facebook</a>
             <a href="https://calendly.com/harmonicsandhealingny" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'white', textDecoration: 'none', letterSpacing: '1.5px' }}>Book Now</a>
-            <button onClick={() => { setMenuOpen(false); navigateToPage(3); }} style={{ fontSize: '0.75rem', color: 'white', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1.5px' }}>About</button>
+            <button onClick={() => { setMenuOpen(false); navigateToPage('about'); }} style={{ fontSize: '0.75rem', color: 'white', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1.5px' }}>About</button>
           </div>
         </div>
       )}
 
-      {/* Pages container - vertical scroll */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        transform: `translateY(-${currentIndex * 100}vh)`,
-        transition: 'transform 0.6s ease-out',
-        width: '100%'
-      }}>
-        <HeroPage bgImage={bgImage} bgOpacity={bgOpacity} backgroundImages={backgroundImages} handleImageChange={handleImageChange} navigateToPage={navigateToPage} />
-        <HealingPage />
-        <GongPage />
-        <AboutPage />
-      </div>
+      {/* Background for sections */}
+      {currentPage !== 'home' && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+          <HeroPage 
+            bgImage={bgImage} 
+            bgOpacity={bgOpacity} 
+            backgroundImages={backgroundImages} 
+            handleImageChange={handleImageChange}
+            handleMouseLeave={handleMouseLeave}
+            navigateToPage={navigateToPage} 
+          />
+        </div>
+      )}
+
+      {/* Sections with parallax */}
+      {currentPage !== 'home' && (
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          zIndex: 1,
+          transform: `translateY(-${scrollProgress * 0.3}vh)`,
+          transition: 'transform 0.05s linear'
+        }}>
+          {currentPage === 'healing' && <HealingPage />}
+          {currentPage === 'gong' && <GongPage />}
+          {currentPage === 'about' && <AboutPage />}
+        </div>
+      )}
+
+      {/* Home page */}
+      {currentPage === 'home' && (
+        <HeroPage 
+          bgImage={bgImage} 
+          bgOpacity={bgOpacity} 
+          backgroundImages={backgroundImages} 
+          handleImageChange={handleImageChange}
+          handleMouseLeave={handleMouseLeave}
+          navigateToPage={navigateToPage} 
+        />
+      )}
     </div>
   );
 }
 
-function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, navigateToPage }) {
+function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, handleMouseLeave, navigateToPage }) {
   const handleMouseEnter = (link) => {
     handleImageChange(backgroundImages[link]);
   };
@@ -201,7 +302,16 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, nav
   };
 
   return (
-    <div className="hero" style={{ width: '100vw', height: '100vh', flexShrink: 0 }}>
+    <div className="hero" style={{
+      position: 'relative',
+      width: '100%',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    }}>
       <div style={{ 
         backgroundImage: `url(${bgImage})`,
         opacity: bgOpacity,
@@ -226,16 +336,19 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, nav
         width: '100%',
         height: '100%'
       }}>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2rem',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }} onMouseLeave={() => handleImageChange(backgroundImages.healing)}>
+        <div 
+          onMouseLeave={handleMouseLeave}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2rem',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
           <a 
             href="#" 
-            onClick={(e) => { e.preventDefault(); navigateToPage(1); }}
+            onClick={(e) => { e.preventDefault(); navigateToPage('healing'); }}
             onMouseEnter={() => handleMouseEnter('healing')}
             style={{ 
               fontSize: '2rem', 
@@ -253,7 +366,7 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, nav
           </a>
           <a 
             href="#" 
-            onClick={(e) => { e.preventDefault(); navigateToPage(2); }}
+            onClick={(e) => { e.preventDefault(); navigateToPage('gong'); }}
             onMouseEnter={() => handleMouseEnter('gong')}
             style={{ 
               fontSize: '2rem', 
@@ -271,7 +384,7 @@ function HeroPage({ bgImage, bgOpacity, backgroundImages, handleImageChange, nav
           </a>
           <a 
             href="#" 
-            onClick={(e) => { e.preventDefault(); navigateToPage(3); }}
+            onClick={(e) => { e.preventDefault(); navigateToPage('about'); }}
             onMouseEnter={() => handleMouseEnter('about')}
             style={{ 
               fontSize: '2rem', 
@@ -299,7 +412,7 @@ function HealingPage() {
   };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', flexShrink: 0, backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div className="section-page" style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
       <div style={{ display: 'flex', gap: '3rem', maxWidth: '1200px', width: '100%', alignItems: 'center' }}>
         <div style={{ flex: 1, height: '400px', backgroundImage: `url(${require('./assets/healing/tuning-fork-2.jpg').default})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '10px' }}></div>
         <div style={{ flex: 1, color: '#000' }}>
@@ -334,7 +447,7 @@ function GongPage() {
   };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', flexShrink: 0, backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div className="section-page" style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
       {showContactModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5000 }}>
           <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', maxWidth: '500px', width: '90%' }}>
@@ -363,7 +476,7 @@ function GongPage() {
           <button style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', letterSpacing: '1px' }} onClick={handleContactClick}>Contact Me</button>
           
           {showContactIcons && (
-            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px', display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
+            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px', display: 'flex', gap: '1.5rem', justifyContent: 'flex-start' }}>
               <button onClick={() => window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: '#000' }}>
                 <div style={{ fontSize: '2.5rem' }}>💬</div>
                 <span style={{ fontSize: '0.75rem' }}>WhatsApp</span>
@@ -390,7 +503,7 @@ function AboutPage() {
   const email = 'your-email@example.com';
 
   return (
-    <div style={{ width: '100vw', height: '100vh', flexShrink: 0, backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div className="section-page" style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
       {showContactModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5000 }}>
           <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', maxWidth: '500px', width: '90%' }}>
