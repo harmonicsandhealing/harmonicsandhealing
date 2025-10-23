@@ -263,7 +263,7 @@ function HarmonicsHealing() {
         </div>
       )}
 
-      {/* Modal Overlay - Slides up from bottom */}
+      {/* Modal Overlay - Fades in, slides up on close */}
       {activeModal && (
         <div 
           ref={modalRef}
@@ -276,17 +276,16 @@ function HarmonicsHealing() {
             backgroundColor: '#fff',
             overflowY: 'auto',
             zIndex: 100,
-            animation: 'slideUp 0.5s ease-out'
+            animation: 'fadeIn 0.5s ease-out',
+            transform: `translateY(${Math.max(0, modalScroll * -0.3)}px)`
           }}
         >
           <style>{`
-            @keyframes slideUp {
+            @keyframes fadeIn {
               from {
-                transform: translateY(100vh);
                 opacity: 0;
               }
               to {
-                transform: translateY(0);
                 opacity: 1;
               }
             }
