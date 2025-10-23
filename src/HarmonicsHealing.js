@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Import images
 import healingBg from './assets/healing/tuning-fork-2.jpg';
@@ -15,6 +15,7 @@ function HarmonicsHealing() {
   const [bgOpacity, setBgOpacity] = useState(1);
   const [fadeOverlay, setFadeOverlay] = useState(0);
   const [defaultBg, setDefaultBg] = useState(healingBg);
+  const isTouchingRef = useRef(false);
 
   const backgroundImages = {
     healing: healingBg,
