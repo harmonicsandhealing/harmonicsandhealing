@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Lenis from '@studio-freight/lenis';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 import healingBg from './assets/healing/tuning-fork-2.jpg';
 import aboutBg from './assets/about/about.jpeg';
 import gongBg from './assets/gong/gong_bath.jpg';
@@ -23,6 +25,15 @@ function HarmonicsHealing() {
 
   // Initialize Lenis
   useEffect(() => {
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: false,
+      mirror: true,
+      offset: 120,
+    });
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -37,6 +48,7 @@ function HarmonicsHealing() {
 
     function raf(time) {
       lenis.raf(time);
+      AOS.refresh();
     }
 
     const interval = setInterval(() => {
@@ -330,7 +342,7 @@ function HarmonicsHealing() {
 
       {/* Healing Section */}
       {currentPage === 'healing' && (
-        <section data-section style={{
+        <section data-section data-aos="fade-up" data-aos-offset="100" style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
@@ -360,7 +372,7 @@ function HarmonicsHealing() {
 
       {/* Gong Section */}
       {currentPage === 'gong' && (
-        <section data-section style={{
+        <section data-section data-aos="fade-up" data-aos-offset="100" style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
@@ -387,7 +399,7 @@ function HarmonicsHealing() {
 
       {/* About Section */}
       {currentPage === 'about' && (
-        <section data-section style={{
+        <section data-section data-aos="fade-up" data-aos-offset="100" style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
