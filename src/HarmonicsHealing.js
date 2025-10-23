@@ -19,8 +19,6 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  const [isAtBottom, setIsAtBottom] = useState(false);
-
   // Handle modal scroll to detect swipe up and create smooth parallax
   useEffect(() => {
     if (!modalRef.current || !activeModal) return;
@@ -32,21 +30,18 @@ function HarmonicsHealing() {
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
 
-      // Check if at bottom
-      const atBottom = scrollY >= maxScroll - 10;
-      setIsAtBottom(atBottom);
+      // When at bottom of content, calculate slide-up amount
+      if (scrollY >= maxScroll - 20) {
+        // Beyond max scroll = slide up amount (unlimited, will go off screen)
+        const overscroll = scrollY - (maxScroll - 20);
+        setModalScroll(overscroll);
 
-      // If at bottom, allow the scroll value to keep increasing for parallax effect
-      if (atBottom) {
-        setModalScroll(scrollY - (maxScroll - 10));
-
-        // Close when slid up enough
-        if (scrollY - (maxScroll - 10) > clientHeight) {
+        // Close when slid up enough (past the screen)
+        if (overscroll > clientHeight) {
           setFadeOverlay(1);
           setTimeout(() => {
             setActiveModal(null);
             setModalScroll(0);
-            setIsAtBottom(false);
             setTimeout(() => setFadeOverlay(0), 50);
           }, 250);
         }
@@ -164,7 +159,7 @@ function HarmonicsHealing() {
           textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
           flex: 1
         }}>
-          Tuned to Harmony, Healed by Sound...
+          Tuned to Harmony, Healed by Sound
         </div>
 
         {/* Hamburger */}
