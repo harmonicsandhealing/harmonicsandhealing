@@ -32,12 +32,12 @@ function HarmonicsHealing() {
 
       // When at bottom of content, calculate slide-up amount
       if (scrollY >= maxScroll - 20) {
-        // Beyond max scroll = slide up amount
+        // Beyond max scroll = slide up amount (unlimited, will go off screen)
         const overscroll = scrollY - (maxScroll - 20);
         setModalScroll(overscroll);
 
-        // Close when slid up enough
-        if (overscroll > 150) {
+        // Close when slid up enough (past the screen)
+        if (overscroll > clientHeight) {
           setFadeOverlay(1);
           setTimeout(() => {
             setActiveModal(null);
