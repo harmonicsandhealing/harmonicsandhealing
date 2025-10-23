@@ -49,14 +49,27 @@ function HarmonicsHealing() {
     };
   }, []);
 
-  // Handle scroll to detect when to go back to home
+  // Handle scroll to detect when to go back to home AND create parallax effect
   useEffect(() => {
-    const handleScroll = () => {
-      if (!lenisRef.current || currentPage === 'home' || isTransitioningRef.current) return;
+    if (!lenisRef.current) return;
 
+    const handleLenisScroll = () => {
       const scrollY = lenisRef.current.scroll;
       
-      if (scrollY < 50) {
+      // Parallax effect on sections
+      if (currentPage !== 'home') {
+        const sections = document.querySelectorAll('[data-section]');
+        sections.forEach(section => {
+          const rect = section.getBoundingClientRect();
+          const windowHeight = window.innerHeight;
+          const distance = windowHeight - rect.top;
+          const parallaxAmount = Math.max(0, Math.min(distance * 0.3, 100));
+          section.style.transform = `translateY(${parallaxAmount}px)`;
+        });
+      }
+      
+      // Detect scroll back to home
+      if (currentPage !== 'home' && !isTransitioningRef.current && scrollY < 50) {
         isTransitioningRef.current = true;
         setFadeOverlay(1);
         
@@ -71,9 +84,15 @@ function HarmonicsHealing() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [currentPage]);
+    // Use Lenis's internal RAF loop
+    lenisRef.current.on('scroll', handleLenisScroll);
+    
+    return () => {
+      if (lenisRef.current) {
+        lenisRef.current.off('scroll', handleLenisScroll);
+      }
+    };
+  }, [currentPage, backgroundImages]);
 
   const navigateToPage = (page) => {
     if (page === currentPage || isTransitioningRef.current) return;
@@ -311,7 +330,7 @@ function HarmonicsHealing() {
 
       {/* Healing Section */}
       {currentPage === 'healing' && (
-        <section style={{
+        <section data-section style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
@@ -341,7 +360,7 @@ function HarmonicsHealing() {
 
       {/* Gong Section */}
       {currentPage === 'gong' && (
-        <section style={{
+        <section data-section style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
@@ -368,7 +387,7 @@ function HarmonicsHealing() {
 
       {/* About Section */}
       {currentPage === 'about' && (
-        <section style={{
+        <section data-section style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
