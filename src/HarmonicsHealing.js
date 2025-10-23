@@ -78,7 +78,7 @@ function HarmonicsHealing() {
         const touchCurrentY = e.touches[0].clientY;
         const deltaY = lastTouchY - touchCurrentY;
         lastTouchY = touchCurrentY;
-        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY * 0.5)));
+        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY * 2)));
       }
     };
 
