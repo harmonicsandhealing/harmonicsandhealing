@@ -22,32 +22,26 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Smooth scroll animation - but NOT during touch
+  // Intersection Observer for smooth parallax
   useEffect(() => {
-    let animationFrame;
-    
-    const animate = () => {
-      setScrollProgress(current => {
-        const diff = targetScroll - current;
-        if (Math.abs(diff) < 0.5) {
-          return targetScroll;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const rect = entry.target.getBoundingClientRect();
+          const scrolled = window.innerHeight - rect.top;
+          const progress = (scrolled / (window.innerHeight + rect.height)) * 300;
+          setScrollProgress(Math.max(0, Math.min(300, progress)));
         }
-        return current + diff * 0.1;
       });
-      animationFrame = requestAnimationFrame(animate);
-    };
-    
-    // Only animate if not actively touching
-    if (!isTouchingRef.current) {
-      animationFrame = requestAnimationFrame(animate);
-    } else {
-      setScrollProgress(targetScroll);
-    }
-    
-    return () => cancelAnimationFrame(animationFrame);
-  }, [targetScroll]);
+    }, { threshold: 0 });
 
-  const isTouchingRef = React.useRef(false);
+    const sectionContainer = document.querySelector('[data-parallax-container]');
+    if (sectionContainer) {
+      observer.observe(sectionContainer);
+    }
+
+    return () => observer.disconnect();
+  }, [currentPage]);
 
   // Touch and wheel handlers
   useEffect(() => {
