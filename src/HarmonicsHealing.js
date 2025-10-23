@@ -19,25 +19,25 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Handle modal scroll to detect swipe up
+  // Handle modal scroll to detect swipe up and create smooth parallax
   useEffect(() => {
     if (!modalRef.current || !activeModal) return;
 
     const handleScroll = () => {
-      const scrollY = modalRef.current.scrollTop;
-      const scrollHeight = modalRef.current.scrollHeight;
-      const clientHeight = modalRef.current.clientHeight;
-      const contentHeight = scrollHeight - clientHeight;
+      const modal = modalRef.current;
+      const scrollY = modal.scrollTop;
+      const scrollHeight = modal.scrollHeight;
+      const clientHeight = modal.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
 
-      // Only start parallax effect after reaching near bottom of content
-      // And when scrolling back up
-      if (scrollY >= contentHeight - 50 && scrollY > 0) {
-        // Calculate how far past the bottom we've scrolled
-        const parallaxAmount = Math.max(0, scrollY - (contentHeight - 50)) * 0.5;
-        setModalScroll(parallaxAmount);
+      // When at bottom of content, calculate slide-up amount
+      if (scrollY >= maxScroll - 20) {
+        // Beyond max scroll = slide up amount
+        const overscroll = scrollY - (maxScroll - 20);
+        setModalScroll(overscroll);
 
-        // Close modal when scrolled far enough
-        if (parallaxAmount > 100) {
+        // Close when slid up enough
+        if (overscroll > 150) {
           setFadeOverlay(1);
           setTimeout(() => {
             setActiveModal(null);
@@ -290,8 +290,8 @@ function HarmonicsHealing() {
             zIndex: 100,
             opacity: 1,
             animation: 'fadeIn 0.4s ease-out forwards',
-            transform: `translateY(${Math.max(0, modalScroll * -0.3)}px)`,
-            transition: 'transform 0.1s ease-out'
+            transform: `translateY(-${modalScroll * 1}px)`,
+            transition: 'transform 0.05s linear'
           }}
         >
           <style>{`
