@@ -19,7 +19,11 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Handle modal scroll to detect swipe up and create smooth parallax
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const lastScrollRef = useRef(0);
+  const velocityRef = useRef(0);
+
+  // Handle modal scroll to detect when at bottom
   useEffect(() => {
     if (!modalRef.current || !activeModal) return;
 
@@ -30,30 +34,108 @@ function HarmonicsHealing() {
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
 
-      // When at bottom of content, calculate slide-up amount
-      if (scrollY >= maxScroll - 20) {
-        // Beyond max scroll = slide up amount (unlimited, will go off screen)
-        const overscroll = scrollY - (maxScroll - 20);
-        setModalScroll(overscroll);
+      const atBottom = scrollY >= maxScroll - 10;
+      setIsAtBottom(atBottom);
 
-        // Close when slid up enough (past the screen)
-        if (overscroll > clientHeight) {
-          setFadeOverlay(1);
-          setTimeout(() => {
-            setActiveModal(null);
-            setModalScroll(0);
-            setTimeout(() => setFadeOverlay(0), 50);
-          }, 250);
-        }
-      } else {
+      if (!atBottom) {
         setModalScroll(0);
       }
+
+      lastScrollRef.current = scrollY;
     };
 
     const modal = modalRef.current;
     modal.addEventListener('scroll', handleScroll, { passive: true });
     return () => modal.removeEventListener('scroll', handleScroll);
   }, [activeModal]);
+
+  // Handle wheel events to detect scrolling past bottom
+  useEffect(() => {
+    if (!modalRef.current || !activeModal) return;
+
+    const handleWheel = (e) => {
+      if (!isAtBottom) return;
+
+      const modal = modalRef.current;
+      const scrollHeight = modal.scrollHeight;
+      const clientHeight = modal.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      const atMaxScroll = modal.scrollTop >= maxScroll - 10;
+
+      if (atMaxScroll && e.deltaY > 0) {
+        e.preventDefault();
+        const newParallax = modalScroll + e.deltaY * 0.5;
+        setModalScroll(newParallax);
+
+        // Close when slid up enough
+        if (newParallax > clientHeight) {
+          setFadeOverlay(1);
+          setTimeout(() => {
+            setActiveModal(null);
+            setModalScroll(0);
+            setIsAtBottom(false);
+            setTimeout(() => setFadeOverlay(0), 50);
+          }, 250);
+        }
+      }
+    };
+
+    const modal = modalRef.current;
+    modal.addEventListener('wheel', handleWheel, { passive: false });
+    return () => modal.removeEventListener('wheel', handleWheel);
+  }, [activeModal, isAtBottom, modalScroll]);
+
+  // Handle touch events for iPhone
+  useEffect(() => {
+    if (!modalRef.current || !activeModal) return;
+
+    let touchStartY = 0;
+    let lastTouchY = 0;
+
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY;
+      lastTouchY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e) => {
+      const currentY = e.touches[0].clientY;
+      const deltaY = lastTouchY - currentY;
+      lastTouchY = currentY;
+
+      if (!isAtBottom) return;
+
+      const modal = modalRef.current;
+      const scrollHeight = modal.scrollHeight;
+      const clientHeight = modal.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      const atMaxScroll = modal.scrollTop >= maxScroll - 10;
+
+      if (atMaxScroll && deltaY > 0) {
+        e.preventDefault();
+        const newParallax = modalScroll + deltaY * 1.5;
+        setModalScroll(newParallax);
+
+        // Close when slid up enough
+        if (newParallax > clientHeight) {
+          setFadeOverlay(1);
+          setTimeout(() => {
+            setActiveModal(null);
+            setModalScroll(0);
+            setIsAtBottom(false);
+            setTimeout(() => setFadeOverlay(0), 50);
+          }, 250);
+        }
+      }
+    };
+
+    const modal = modalRef.current;
+    modal.addEventListener('touchstart', handleTouchStart, { passive: true });
+    modal.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      modal.removeEventListener('touchstart', handleTouchStart);
+      modal.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [activeModal, isAtBottom, modalScroll]);
 
   const openModal = (section) => {
     setMenuOpen(false);
@@ -235,7 +317,7 @@ function HarmonicsHealing() {
                 padding: 0
               }}
             >
-              Healing Sessions
+              Healing Sessions...
             </button>
             <button 
               onClick={() => openModal('gong')}
