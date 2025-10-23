@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Lenis from '@studio-freight/lenis';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
 import healingBg from './assets/healing/tuning-fork-2.jpg';
 import aboutBg from './assets/about/about.jpeg';
 import gongBg from './assets/gong/gong_bath.jpg';
@@ -25,15 +23,6 @@ function HarmonicsHealing() {
 
   // Initialize Lenis
   useEffect(() => {
-    // Initialize AOS
-    AOS.init({
-      duration: 800,
-      easing: 'ease-out-cubic',
-      once: false,
-      mirror: true,
-      offset: 120,
-    });
-
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -48,7 +37,6 @@ function HarmonicsHealing() {
 
     function raf(time) {
       lenis.raf(time);
-      AOS.refresh();
     }
 
     const interval = setInterval(() => {
@@ -61,27 +49,14 @@ function HarmonicsHealing() {
     };
   }, []);
 
-  // Handle scroll to detect when to go back to home AND create parallax effect
+  // Handle scroll to detect when to go back to home
   useEffect(() => {
-    if (!lenisRef.current) return;
+    const handleScroll = () => {
+      if (!lenisRef.current || currentPage === 'home' || isTransitioningRef.current) return;
 
-    const handleLenisScroll = () => {
       const scrollY = lenisRef.current.scroll;
       
-      // Parallax effect on sections
-      if (currentPage !== 'home') {
-        const sections = document.querySelectorAll('[data-section]');
-        sections.forEach(section => {
-          const rect = section.getBoundingClientRect();
-          const windowHeight = window.innerHeight;
-          const distance = windowHeight - rect.top;
-          const parallaxAmount = Math.max(0, Math.min(distance * 0.3, 100));
-          section.style.transform = `translateY(${parallaxAmount}px)`;
-        });
-      }
-      
-      // Detect scroll back to home
-      if (currentPage !== 'home' && !isTransitioningRef.current && scrollY < 50) {
+      if (scrollY < 50) {
         isTransitioningRef.current = true;
         setFadeOverlay(1);
         
@@ -96,12 +71,13 @@ function HarmonicsHealing() {
       }
     };
 
-    // Use Lenis's internal RAF loop
-    lenisRef.current.on('scroll', handleLenisScroll);
+    if (lenisRef.current) {
+      lenisRef.current.on('scroll', handleScroll);
+    }
     
     return () => {
       if (lenisRef.current) {
-        lenisRef.current.off('scroll', handleLenisScroll);
+        lenisRef.current.off('scroll', handleScroll);
       }
     };
   }, [currentPage, backgroundImages]);
@@ -342,7 +318,7 @@ function HarmonicsHealing() {
 
       {/* Healing Section */}
       {currentPage === 'healing' && (
-        <section data-section data-aos="fade-up" data-aos-offset="100" style={{
+        <section style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
@@ -372,7 +348,7 @@ function HarmonicsHealing() {
 
       {/* Gong Section */}
       {currentPage === 'gong' && (
-        <section data-section data-aos="fade-up" data-aos-offset="100" style={{
+        <section style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
@@ -399,7 +375,7 @@ function HarmonicsHealing() {
 
       {/* About Section */}
       {currentPage === 'about' && (
-        <section data-section data-aos="fade-up" data-aos-offset="100" style={{
+        <section style={{
           minHeight: '100vh',
           backgroundColor: '#fff',
           padding: '80px 2rem 2rem',
