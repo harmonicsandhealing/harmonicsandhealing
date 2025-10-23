@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Lenis from '@studio-freight/lenis';
 import healingBg from './assets/healing/tuning-fork-2.jpg';
 import aboutBg from './assets/about/about.jpeg';
 import gongBg from './assets/gong/gong_bath.jpg';
 import logo from './assets/logo/logo.jpg';
 
 function HarmonicsHealing() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [activeModal, setActiveModal] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [bgImage, setBgImage] = useState(healingBg);
   const [bgOpacity, setBgOpacity] = useState(1);
   const [fadeOverlay, setFadeOverlay] = useState(0);
-  const [defaultBg, setDefaultBg] = useState(healingBg);
-  const lenisRef = useRef(null);
-  const isTransitioningRef = useRef(false);
+  const [modalScroll, setModalScroll] = useState(0);
+  const modalRef = useRef(null);
 
   const backgroundImages = {
     healing: healingBg,
@@ -21,84 +19,41 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Initialize Lenis
+  // Handle modal scroll to detect swipe up
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      direction: 'vertical',
-      gestureDirection: 'vertical',
-      smooth: true,
-      smoothTouch: false,
-      touchMultiplier: 2,
-    });
+    if (!modalRef.current || !activeModal) return;
 
-    lenisRef.current = lenis;
-
-    function raf(time) {
-      lenis.raf(time);
-    }
-
-    const interval = setInterval(() => {
-      requestAnimationFrame(raf);
-    }, 16);
-
-    return () => {
-      clearInterval(interval);
-      lenis.destroy();
-    };
-  }, []);
-
-  // Handle scroll to detect when to go back to home
-  useEffect(() => {
     const handleScroll = () => {
-      if (!lenisRef.current || currentPage === 'home' || isTransitioningRef.current) return;
+      const scrollY = modalRef.current.scrollTop;
+      setModalScroll(scrollY);
 
-      const scrollY = lenisRef.current.scroll;
-      
-      if (scrollY < 50) {
-        isTransitioningRef.current = true;
+      // Close modal when scrolled to top
+      if (scrollY < 20) {
         setFadeOverlay(1);
-        
         setTimeout(() => {
-          setCurrentPage('home');
-          setBgImage(backgroundImages.healing);
-          setDefaultBg(backgroundImages.healing);
-          lenisRef.current?.scrollTo(0, { duration: 0 });
+          setActiveModal(null);
+          setModalScroll(0);
           setTimeout(() => setFadeOverlay(0), 50);
-          isTransitioningRef.current = false;
         }, 250);
       }
     };
 
-    if (lenisRef.current) {
-      lenisRef.current.on('scroll', handleScroll);
-    }
-    
-    return () => {
-      if (lenisRef.current) {
-        lenisRef.current.off('scroll', handleScroll);
-      }
-    };
-  }, [currentPage, backgroundImages]);
+    const modal = modalRef.current;
+    modal.addEventListener('scroll', handleScroll, { passive: true });
+    return () => modal.removeEventListener('scroll', handleScroll);
+  }, [activeModal]);
 
-  const navigateToPage = (page) => {
-    if (page === currentPage || isTransitioningRef.current) return;
-    
-    isTransitioningRef.current = true;
+  const openModal = (section) => {
     setMenuOpen(false);
     setFadeOverlay(1);
-
+    
     setTimeout(() => {
-      setCurrentPage(page);
-      const newBg = backgroundImages[page];
-      setBgImage(newBg);
-      setDefaultBg(newBg);
-      
-      lenisRef.current?.scrollTo(0, { duration: 0 });
-
+      setActiveModal(section);
+      setBgImage(backgroundImages[section]);
+      if (modalRef.current) {
+        modalRef.current.scrollTop = 0;
+      }
       setTimeout(() => setFadeOverlay(0), 50);
-      isTransitioningRef.current = false;
     }, 250);
   };
 
@@ -112,13 +67,7 @@ function HarmonicsHealing() {
   };
 
   const handleMouseLeave = () => {
-    if (bgImage !== defaultBg) {
-      setBgOpacity(0);
-      setTimeout(() => {
-        setBgImage(defaultBg);
-        setTimeout(() => setBgOpacity(1), 5);
-      }, 150);
-    }
+    setBgImage(healingBg);
   };
 
   return (
@@ -137,67 +86,86 @@ function HarmonicsHealing() {
         pointerEvents: fadeOverlay > 0 ? 'all' : 'none'
       }}></div>
 
-      {/* Catchphrase */}
+      {/* Hero Background (always visible, fixed) */}
       <div style={{
         position: 'fixed',
-        top: '1rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        opacity: bgOpacity,
+        transition: 'opacity 0.3s ease',
+        zIndex: 0
+      }}></div>
+
+      {/* Dark overlay on background */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        zIndex: 1,
+        pointerEvents: 'none'
+      }}></div>
+
+      {/* Fixed Header */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '80px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 2rem',
         zIndex: 2000,
-        fontSize: '1.2rem',
-        fontWeight: 300,
-        letterSpacing: '2px',
-        textAlign: 'center',
-        color: 'white',
-        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-        padding: '0 1rem',
-        whiteSpace: 'normal',
-        maxWidth: '70%'
+        backgroundColor: 'rgba(0, 0, 0, 0.3)'
       }}>
-        Tuned to Harmony, Healed by Sound
-      </div>
+        {/* Logo */}
+        <div style={{ opacity: 0.8, cursor: 'pointer' }}>
+          <img 
+            src={logo} 
+            alt="Logo" 
+            style={{ width: '50px', height: '50px', objectFit: 'contain' }}
+          />
+        </div>
 
-      {/* Logo */}
-      <div style={{
-        position: 'fixed',
-        top: '1rem',
-        left: '2rem',
-        zIndex: 2000,
-        opacity: 0.5,
-        cursor: 'pointer'
-      }}
-      onClick={() => navigateToPage('home')}
-      >
-        <img 
-          src={logo} 
-          alt="Logo" 
+        {/* Catchphrase */}
+        <div style={{
+          fontSize: '1.1rem',
+          fontWeight: 300,
+          letterSpacing: '2px',
+          textAlign: 'center',
+          color: 'white',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+          flex: 1
+        }}>
+          Tuned to Harmony, Healed by Sound
+        </div>
+
+        {/* Hamburger */}
+        <div 
+          onClick={() => setMenuOpen(!menuOpen)}
           style={{
-            width: '50px',
-            height: '50px',
-            objectFit: 'contain'
+            width: '30px',
+            height: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            cursor: 'pointer'
           }}
-        />
-      </div>
-
-      {/* Hamburger Menu */}
-      <div 
-        onClick={() => setMenuOpen(!menuOpen)}
-        style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          width: '30px',
-          height: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          cursor: 'pointer',
-          zIndex: 2001
-        }}
-      >
-        <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(45deg) translate(8px, 8px)' : 'none' }}></span>
-        <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', opacity: menuOpen ? 0 : 1 }}></span>
-        <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none' }}></span>
+        >
+          <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(45deg) translate(8px, 8px)' : 'none' }}></span>
+          <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', opacity: menuOpen ? 0 : 1 }}></span>
+          <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none' }}></span>
+        </div>
       </div>
 
       {/* Menu */}
@@ -220,184 +188,172 @@ function HarmonicsHealing() {
             <a href="https://www.instagram.com/harmonicsandhealing/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'white', textDecoration: 'none', letterSpacing: '1.5px' }}>Insta</a>
             <a href="https://www.facebook.com/profile.php?id=61581215911617" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'white', textDecoration: 'none', letterSpacing: '1.5px' }}>Facebook</a>
             <a href="https://calendly.com/harmonicsandhealingny" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'white', textDecoration: 'none', letterSpacing: '1.5px' }}>Book Now</a>
-            <button onClick={() => { setMenuOpen(false); navigateToPage('about'); }} style={{ fontSize: '0.75rem', color: 'white', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1.5px' }}>About</button>
+            <button onClick={() => { setMenuOpen(false); openModal('about'); }} style={{ fontSize: '0.75rem', color: 'white', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1.5px' }}>About</button>
           </div>
         </div>
       )}
 
-      {/* Home Page */}
-      {currentPage === 'home' && (
-        <section style={{
+      {/* Hero Content - Center buttons */}
+      {!activeModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
           height: '100vh',
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          position: 'relative',
-          overflow: 'hidden'
+          zIndex: 10
         }}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            zIndex: 1,
-            backgroundImage: `url(${bgImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: bgOpacity,
-            transition: 'opacity 0.3s ease'
-          }}></div>
-
-          <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center', padding: '2rem 4rem', margin: '-2rem -4rem' }} onMouseLeave={handleMouseLeave}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }} onMouseLeave={handleMouseLeave}>
             <button 
-              onClick={() => navigateToPage('healing')}
+              onClick={() => openModal('healing')}
               onMouseEnter={() => handleImageChange(backgroundImages.healing)}
               style={{ 
-                fontSize: '2rem',
+                fontSize: '2.5rem',
                 color: 'white',
                 background: 'none',
                 border: 'none',
-                textDecoration: 'none',
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
-                transition: 'all 0.3s ease',
                 cursor: 'pointer',
-                padding: '1rem 2rem',
-                borderBottom: '1px solid transparent'
+                transition: 'all 0.3s',
+                padding: 0
               }}
             >
               Healing Sessions
             </button>
             <button 
-              onClick={() => navigateToPage('gong')}
+              onClick={() => openModal('gong')}
               onMouseEnter={() => handleImageChange(backgroundImages.gong)}
               style={{ 
-                fontSize: '2rem',
+                fontSize: '2.5rem',
                 color: 'white',
                 background: 'none',
                 border: 'none',
-                textDecoration: 'none',
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
-                transition: 'all 0.3s ease',
                 cursor: 'pointer',
-                padding: '1rem 2rem',
-                borderBottom: '1px solid transparent'
+                transition: 'all 0.3s',
+                padding: 0
               }}
             >
               Gong Bath
             </button>
             <button 
-              onClick={() => navigateToPage('about')}
+              onClick={() => openModal('about')}
               onMouseEnter={() => handleImageChange(backgroundImages.about)}
               style={{ 
-                fontSize: '2rem',
+                fontSize: '2.5rem',
                 color: 'white',
                 background: 'none',
                 border: 'none',
-                textDecoration: 'none',
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
-                transition: 'all 0.3s ease',
                 cursor: 'pointer',
-                padding: '1rem 2rem',
-                borderBottom: '1px solid transparent'
+                transition: 'all 0.3s',
+                padding: 0
               }}
             >
               About
             </button>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Healing Section */}
-      {currentPage === 'healing' && (
-        <section style={{
-          minHeight: '100vh',
-          backgroundColor: '#fff',
-          padding: '80px 2rem 2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{ maxWidth: '1200px', width: '100%', display: 'flex', gap: '3rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/healing/tuning-fork-2.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
-            <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
-              <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>Healing Sessions</h2>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intention—one through the flow of universal life force, the other through the resonance of sound within the energy field.</p>
-              <h3 style={{ fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Aura Tuning</h3>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past.</p>
-              <h3 style={{ fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Reiki</h3>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Reiki is a gentle yet powerful form of energy healing that channels universal life force to promote balance and well-being.</p>
-              <button 
-                onClick={() => window.open('https://calendly.com/harmonicsandhealingny', '_blank')}
-                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '1px' }}
-              >
-                Book a Session
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Modal Overlay - Slides up from bottom */}
+      {activeModal && (
+        <div 
+          ref={modalRef}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100vh',
+            backgroundColor: '#fff',
+            overflowY: 'auto',
+            zIndex: 100,
+            animation: 'slideUp 0.5s ease-out'
+          }}
+        >
+          <style>{`
+            @keyframes slideUp {
+              from {
+                transform: translateY(100vh);
+                opacity: 0;
+              }
+              to {
+                transform: translateY(0);
+                opacity: 1;
+              }
+            }
+          `}</style>
 
-      {/* Gong Section */}
-      {currentPage === 'gong' && (
-        <section style={{
-          minHeight: '100vh',
-          backgroundColor: '#fff',
-          padding: '80px 2rem 2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{ maxWidth: '1200px', width: '100%', display: 'flex', gap: '3rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
-              <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>Gong Bath</h2>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit.</p>
-              <p style={{ fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '1rem' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." — Don Conreaux</p>
-              <button 
-                onClick={() => window.open('https://wa.me/+1234567890', '_blank')}
-                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '1px' }}
-              >
-                Contact Me
-              </button>
-            </div>
-            <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/gong/gong_bath.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
-          </div>
-        </section>
-      )}
+          <div style={{ padding: '80px 2rem 2rem', minHeight: '100vh' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '3rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              
+              {/* Healing Modal */}
+              {activeModal === 'healing' && (
+                <>
+                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/healing/tuning-fork-2.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
+                  <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
+                    <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>Healing Sessions</h2>
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intention—one through the flow of universal life force, the other through the resonance of sound within the energy field.</p>
+                    <h3 style={{ fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Aura Tuning</h3>
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past.</p>
+                    <h3 style={{ fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Reiki</h3>
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Reiki is a gentle yet powerful form of energy healing that channels universal life force to promote balance and well-being.</p>
+                    <button 
+                      onClick={() => window.open('https://calendly.com/harmonicsandhealingny', '_blank')}
+                      style={{ padding: '0.75rem 1.5rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '1px' }}
+                    >
+                      Book a Session
+                    </button>
+                  </div>
+                </>
+              )}
 
-      {/* About Section */}
-      {currentPage === 'about' && (
-        <section style={{
-          minHeight: '100vh',
-          backgroundColor: '#fff',
-          padding: '80px 2rem 2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{ maxWidth: '1200px', width: '100%', display: 'flex', gap: '3rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/about/about.jpeg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
-            <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
-              <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>About</h2>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem' }}>With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.</p>
-              <button 
-                onClick={() => window.location.href = 'mailto:your-email@example.com'}
-                style={{ padding: '0.75rem 1.5rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '1px' }}
-              >
-                Contact Me
-              </button>
+              {/* Gong Modal */}
+              {activeModal === 'gong' && (
+                <>
+                  <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
+                    <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>Gong Bath</h2>
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit.</p>
+                    <p style={{ fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '1rem' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." — Don Conreaux</p>
+                    <button 
+                      onClick={() => window.open('https://wa.me/+1234567890', '_blank')}
+                      style={{ padding: '0.75rem 1.5rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '1px' }}
+                    >
+                      Contact Me
+                    </button>
+                  </div>
+                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/gong/gong_bath.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
+                </>
+              )}
+
+              {/* About Modal */}
+              {activeModal === 'about' && (
+                <>
+                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/about/about.jpeg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
+                  <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
+                    <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>About</h2>
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem' }}>With years of training in sound therapy, energy healing, and meditation practices, we bring ancient wisdom together with modern understanding to support your journey toward wholeness and well-being.</p>
+                    <button 
+                      onClick={() => window.location.href = 'mailto:your-email@example.com'}
+                      style={{ padding: '0.75rem 1.5rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '1px' }}
+                    >
+                      Contact Me
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        </section>
+        </div>
       )}
     </div>
   );
