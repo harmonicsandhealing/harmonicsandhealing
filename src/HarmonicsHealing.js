@@ -251,7 +251,7 @@ function HarmonicsHealing() {
         </div>
       )}
 
-      {/* Section pages overlay - fade in on entry, parallax on scroll */}
+      {/* Section pages overlay - parallax with scale effect */}
       {currentPage !== 'home' && (
         <div style={{ 
           position: 'fixed', 
@@ -260,9 +260,9 @@ function HarmonicsHealing() {
           width: '100%', 
           height: '100%', 
           zIndex: 1,
-          transform: `translateY(${Math.max(0, scrollProgress - 1)}vh)`,
-          transition: 'transform 0.4s ease-out',
-          opacity: scrollProgress < 1 ? 1 : 1
+          transform: `translateY(${scrollProgress * 1.5}vh) scale(${1 - scrollProgress * 0.002})`,
+          transition: 'transform 0.08s linear',
+          transformOrigin: 'center center'
         }}>
           {currentPage === 'healing' && <HealingPage />}
           {currentPage === 'gong' && <GongPage />}
