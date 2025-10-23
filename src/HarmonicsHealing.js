@@ -1,23 +1,4 @@
-// Smooth lerp animation
-  useEffect(() => {
-    let animationFrame;
-    
-    const animate = () => {
-      setScrollProgress(current => {
-        const diff = targetScroll - current;
-        if (Math.abs(diff) < 0.1) {
-          return targetScroll;
-        }
-        return current + diff * 0.12;
-      });
-      animationFrame = requestAnimationFrame(animate);
-    };
-    
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [targetScroll]);import React, { useState, useEffect, useRef } from 'react';
-
-// Import images
+import React, { useState, useEffect, useRef } from 'react';
 import healingBg from './assets/healing/tuning-fork-2.jpg';
 import aboutBg from './assets/about/about.jpeg';
 import gongBg from './assets/gong/gong_bath.jpg';
@@ -40,26 +21,24 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Intersection Observer for smooth parallax
+  // Smooth lerp animation
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const rect = entry.target.getBoundingClientRect();
-          const scrolled = window.innerHeight - rect.top;
-          const progress = (scrolled / (window.innerHeight + rect.height)) * 300;
-          setScrollProgress(Math.max(0, Math.min(300, progress)));
+    let animationFrame;
+    
+    const animate = () => {
+      setScrollProgress(current => {
+        const diff = targetScroll - current;
+        if (Math.abs(diff) < 0.1) {
+          return targetScroll;
         }
+        return current + diff * 0.12;
       });
-    }, { threshold: 0 });
-
-    const sectionContainer = document.querySelector('[data-parallax-container]');
-    if (sectionContainer) {
-      observer.observe(sectionContainer);
-    }
-
-    return () => observer.disconnect();
-  }, [currentPage]);
+      animationFrame = requestAnimationFrame(animate);
+    };
+    
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [targetScroll]);
 
   // Touch and wheel handlers
   useEffect(() => {
@@ -70,9 +49,9 @@ function HarmonicsHealing() {
       if (currentPage !== 'home') {
         e.preventDefault();
         if (e.deltaY > 0) {
-          setTargetScroll(prev => Math.min(prev + 10, 300));
+          setTargetScroll(prev => Math.min(prev + 15, 300));
         } else {
-          setTargetScroll(prev => Math.max(prev - 10, 0));
+          setTargetScroll(prev => Math.max(prev - 15, 0));
         }
       }
     };
@@ -90,8 +69,7 @@ function HarmonicsHealing() {
         const touchCurrentY = e.touches[0].clientY;
         const deltaY = lastTouchY - touchCurrentY;
         lastTouchY = touchCurrentY;
-        // Map pixel movement to scroll: 1px of swipe = 1 unit of scroll
-        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY)));
+        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY * 0.8)));
       }
     };
 
@@ -222,7 +200,6 @@ function HarmonicsHealing() {
 
       {/* Hamburger Menu */}
       <div 
-        className={`hamburger ${menuOpen ? 'open' : ''}`}
         onClick={() => setMenuOpen(!menuOpen)}
         style={{
           position: 'fixed',
@@ -283,16 +260,18 @@ function HarmonicsHealing() {
 
       {/* Sections with parallax */}
       {currentPage !== 'home' && (
-        <div style={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          width: '100%', 
-          height: '100%', 
-          zIndex: 1,
-          transform: `translateY(-${scrollProgress * 0.3}vh)`,
-          transition: isTouchingRef.current ? 'none' : 'transform 0.05s linear'
-        }}>
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: '100%', 
+            zIndex: 1,
+            transform: `translateY(-${scrollProgress * 0.3}vh)`,
+            transition: isTouchingRef.current ? 'none' : 'transform 0.08s cubic-bezier(0.33, 0.66, 0.66, 1)',
+            willChange: 'transform'
+          }}>
           {currentPage === 'healing' && <HealingPage />}
           {currentPage === 'gong' && <GongPage />}
           {currentPage === 'about' && <AboutPage />}
@@ -434,7 +413,7 @@ function HealingPage() {
   };
 
   return (
-    <div className="section-page" style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
       <div style={{ display: 'flex', gap: '3rem', maxWidth: '1200px', width: '100%', alignItems: 'center' }}>
         <div style={{ flex: 1, height: '400px', backgroundImage: `url(${require('./assets/healing/tuning-fork-2.jpg').default})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '10px' }}></div>
         <div style={{ flex: 1, color: '#000' }}>
@@ -469,7 +448,7 @@ function GongPage() {
   };
 
   return (
-    <div className="section-page" style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
       {showContactModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5000 }}>
           <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', maxWidth: '500px', width: '90%' }}>
@@ -525,7 +504,7 @@ function AboutPage() {
   const email = 'your-email@example.com';
 
   return (
-    <div className="section-page" style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div style={{ backgroundColor: '#fff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
       {showContactModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5000 }}>
           <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', maxWidth: '500px', width: '90%' }}>
