@@ -25,16 +25,28 @@ function HarmonicsHealing() {
 
     const handleScroll = () => {
       const scrollY = modalRef.current.scrollTop;
-      setModalScroll(scrollY);
+      const scrollHeight = modalRef.current.scrollHeight;
+      const clientHeight = modalRef.current.clientHeight;
+      const contentHeight = scrollHeight - clientHeight;
 
-      // Close modal when scrolled to top
-      if (scrollY < 20) {
-        setFadeOverlay(1);
-        setTimeout(() => {
-          setActiveModal(null);
-          setModalScroll(0);
-          setTimeout(() => setFadeOverlay(0), 50);
-        }, 250);
+      // Only start parallax effect after reaching near bottom of content
+      // And when scrolling back up
+      if (scrollY >= contentHeight - 50 && scrollY > 0) {
+        // Calculate how far past the bottom we've scrolled
+        const parallaxAmount = Math.max(0, scrollY - (contentHeight - 50)) * 0.5;
+        setModalScroll(parallaxAmount);
+
+        // Close modal when scrolled far enough
+        if (parallaxAmount > 100) {
+          setFadeOverlay(1);
+          setTimeout(() => {
+            setActiveModal(null);
+            setModalScroll(0);
+            setTimeout(() => setFadeOverlay(0), 50);
+          }, 250);
+        }
+      } else {
+        setModalScroll(0);
       }
     };
 
@@ -276,8 +288,10 @@ function HarmonicsHealing() {
             backgroundColor: '#fff',
             overflowY: 'auto',
             zIndex: 100,
-            animation: 'fadeIn 0.5s ease-out',
-            transform: `translateY(${Math.max(0, modalScroll * -0.3)}px)`
+            opacity: 1,
+            animation: 'fadeIn 0.4s ease-out forwards',
+            transform: `translateY(${Math.max(0, modalScroll * -0.3)}px)`,
+            transition: 'transform 0.1s ease-out'
           }}
         >
           <style>{`
