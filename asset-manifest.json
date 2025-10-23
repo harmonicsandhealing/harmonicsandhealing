@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/harmonicsandhealing/static/css/main.98ee43ae.css",
+    "main.js": "/harmonicsandhealing/static/js/main.f618aae5.js",
+    "static/media/tuning-fork-2.jpg": "/harmonicsandhealing/static/media/tuning-fork-2.dccc7a424476ad3a3c6a.jpg",
+    "static/media/about.jpeg": "/harmonicsandhealing/static/media/about.f532a19caf7c2966e8c9.jpeg",
+    "static/media/logo.jpg": "/harmonicsandhealing/static/media/logo.7a06c4443459c8e96cee.jpg",
+    "static/media/gong_bath.jpg": "/harmonicsandhealing/static/media/gong_bath.553b6e744634e144c4ad.jpg",
+    "index.html": "/harmonicsandhealing/index.html",
+    "main.98ee43ae.css.map": "/harmonicsandhealing/static/css/main.98ee43ae.css.map",
+    "main.f618aae5.js.map": "/harmonicsandhealing/static/js/main.f618aae5.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.98ee43ae.css",
+    "static/js/main.f618aae5.js"
+  ]
+}
