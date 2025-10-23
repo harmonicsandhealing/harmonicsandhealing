@@ -49,14 +49,15 @@ function HarmonicsHealing() {
     return () => modal.removeEventListener('scroll', handleScroll);
   }, [activeModal]);
 
-  // Handle wheel events to detect scrolling past bottom
+  // Handle wheel events on window level for parallax effect anywhere on page
   useEffect(() => {
-    if (!modalRef.current || !activeModal) return;
+    if (!activeModal || !isAtBottom) return;
 
-    const handleWheel = (e) => {
-      if (!isAtBottom) return;
-
+    const handleWindowWheel = (e) => {
       const modal = modalRef.current;
+      if (!modal) return;
+
+      // Only trigger if modal is at bottom
       const scrollHeight = modal.scrollHeight;
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
@@ -66,6 +67,7 @@ function HarmonicsHealing() {
         e.preventDefault();
         const newParallax = modalScroll + e.deltaY * 0.5;
         setModalScroll(newParallax);
+        velocityRef.current = e.deltaY;
 
         // Close when slid up enough
         if (newParallax > clientHeight) {
@@ -80,9 +82,8 @@ function HarmonicsHealing() {
       }
     };
 
-    const modal = modalRef.current;
-    modal.addEventListener('wheel', handleWheel, { passive: false });
-    return () => modal.removeEventListener('wheel', handleWheel);
+    window.addEventListener('wheel', handleWindowWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWindowWheel);
   }, [activeModal, isAtBottom, modalScroll]);
 
   // Handle touch events for iPhone
@@ -114,6 +115,7 @@ function HarmonicsHealing() {
         e.preventDefault();
         const newParallax = modalScroll + deltaY * 1.5;
         setModalScroll(newParallax);
+        velocityRef.current = deltaY;
 
         // Close when slid up enough
         if (newParallax > clientHeight) {
@@ -196,68 +198,37 @@ function HarmonicsHealing() {
         zIndex: 0
       }}></div>
 
-      {/* Dark overlay on background */}
+      {/* Logo */}
       <div style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        zIndex: 1,
-        pointerEvents: 'none'
+        top: '1.5rem',
+        left: '1.5rem',
+        width: '50px',
+        height: '50px',
+        backgroundImage: `url(${logo})`,
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        zIndex: 2000
       }}></div>
 
-      {/* Fixed Header */}
+      {/* Hamburger Menu */}
       <div style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '80px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 2rem',
-        zIndex: 2000,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)'
+        top: '1.5rem',
+        right: '1.5rem',
+        zIndex: 2000
       }}>
-        {/* Logo */}
-        <div style={{ opacity: 0.8, cursor: 'pointer' }}>
-          <img 
-            src={logo} 
-            alt="Logo" 
-            style={{ width: '50px', height: '50px', objectFit: 'contain' }}
-          />
-        </div>
-
-        {/* Catchphrase */}
-        <div style={{
-          fontSize: '1.1rem',
-          fontWeight: 300,
-          letterSpacing: '2px',
-          textAlign: 'center',
-          color: 'white',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-          flex: 1
-        }}>
-          Tuned to Harmony, Healed by Sound
-        </div>
-
-        {/* Hamburger */}
         <div 
           onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            width: '30px',
-            height: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            cursor: 'pointer'
-          }}
-        >
-          <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(45deg) translate(8px, 8px)' : 'none' }}></span>
-          <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', opacity: menuOpen ? 0 : 1 }}></span>
+          style={{ 
+            cursor: 'pointer', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '5px'
+          }}>
+          <span style={{ width: '30px', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(45deg) translate(6px, 6px)' : 'none' }}></span>
+          <span style={{ width: '30px', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', opacity: menuOpen ? 0 : 1 }}></span>
           <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none' }}></span>
         </div>
       </div>
