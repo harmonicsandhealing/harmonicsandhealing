@@ -164,7 +164,7 @@ function HarmonicsHealing() {
           textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
           flex: 1
         }}>
-          Tuned to Harmony, Healed by Sound
+          Tuned to Harmony, Healed by Sound...
         </div>
 
         {/* Hamburger */}
