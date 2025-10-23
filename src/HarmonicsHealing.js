@@ -1,4 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+// Smooth lerp animation
+  useEffect(() => {
+    let animationFrame;
+    
+    const animate = () => {
+      setScrollProgress(current => {
+        const diff = targetScroll - current;
+        if (Math.abs(diff) < 0.1) {
+          return targetScroll;
+        }
+        return current + diff * 0.12;
+      });
+      animationFrame = requestAnimationFrame(animate);
+    };
+    
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [targetScroll]);import React, { useState, useEffect, useRef } from 'react';
 
 // Import images
 import healingBg from './assets/healing/tuning-fork-2.jpg';
