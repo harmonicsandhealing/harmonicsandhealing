@@ -44,7 +44,7 @@ function HarmonicsHealing() {
   // Touch and wheel handlers
   useEffect(() => {
     let touchStartY = 0;
-    let touchEndY = 0;
+    let isTouching = false;
 
     const handleWheel = (e) => {
       if (currentPage !== 'home') {
@@ -60,21 +60,20 @@ function HarmonicsHealing() {
     const handleTouchStart = (e) => {
       if (currentPage !== 'home') {
         touchStartY = e.touches[0].clientY;
+        isTouching = true;
       }
     };
 
     const handleTouchMove = (e) => {
-      if (currentPage !== 'home') {
-        e.preventDefault();
-        touchEndY = e.touches[0].clientY;
-        const deltaY = touchStartY - touchEndY;
-        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY * 0.5)));
+      if (currentPage !== 'home' && isTouching) {
+        const touchCurrentY = e.touches[0].clientY;
+        const deltaY = touchStartY - touchCurrentY;
+        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY)));
       }
     };
 
     const handleTouchEnd = () => {
-      touchStartY = 0;
-      touchEndY = 0;
+      isTouching = false;
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
