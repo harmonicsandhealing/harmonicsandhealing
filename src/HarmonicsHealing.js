@@ -52,6 +52,7 @@ function HarmonicsHealing() {
   // Touch and wheel handlers
   useEffect(() => {
     let touchStartY = 0;
+    let lastTouchY = 0;
 
     const handleWheel = (e) => {
       if (currentPage !== 'home') {
@@ -67,6 +68,7 @@ function HarmonicsHealing() {
     const handleTouchStart = (e) => {
       if (currentPage !== 'home') {
         touchStartY = e.touches[0].clientY;
+        lastTouchY = e.touches[0].clientY;
         isTouchingRef.current = true;
       }
     };
@@ -74,8 +76,9 @@ function HarmonicsHealing() {
     const handleTouchMove = (e) => {
       if (currentPage !== 'home' && isTouchingRef.current) {
         const touchCurrentY = e.touches[0].clientY;
-        const deltaY = touchStartY - touchCurrentY;
-        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY)));
+        const deltaY = lastTouchY - touchCurrentY;
+        lastTouchY = touchCurrentY;
+        setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY * 0.5)));
       }
     };
 
