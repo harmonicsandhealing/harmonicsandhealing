@@ -278,7 +278,7 @@ function HarmonicsHealing() {
           height: '100%', 
           zIndex: 1,
           transform: `translateY(-${scrollProgress * 0.3}vh)`,
-          transition: 'transform 0.05s linear'
+          transition: isTouchingRef.current ? 'none' : 'transform 0.05s linear'
         }}>
           {currentPage === 'healing' && <HealingPage />}
           {currentPage === 'gong' && <GongPage />}
