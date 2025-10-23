@@ -22,7 +22,7 @@ function HarmonicsHealing() {
     about: aboutBg
   };
 
-  // Smooth scroll animation
+  // Smooth scroll animation - but NOT during touch
   useEffect(() => {
     let animationFrame;
     
@@ -37,14 +37,21 @@ function HarmonicsHealing() {
       animationFrame = requestAnimationFrame(animate);
     };
     
-    animationFrame = requestAnimationFrame(animate);
+    // Only animate if not actively touching
+    if (!isTouchingRef.current) {
+      animationFrame = requestAnimationFrame(animate);
+    } else {
+      setScrollProgress(targetScroll);
+    }
+    
     return () => cancelAnimationFrame(animationFrame);
   }, [targetScroll]);
+
+  const isTouchingRef = React.useRef(false);
 
   // Touch and wheel handlers
   useEffect(() => {
     let touchStartY = 0;
-    let isTouching = false;
 
     const handleWheel = (e) => {
       if (currentPage !== 'home') {
@@ -60,12 +67,12 @@ function HarmonicsHealing() {
     const handleTouchStart = (e) => {
       if (currentPage !== 'home') {
         touchStartY = e.touches[0].clientY;
-        isTouching = true;
+        isTouchingRef.current = true;
       }
     };
 
     const handleTouchMove = (e) => {
-      if (currentPage !== 'home' && isTouching) {
+      if (currentPage !== 'home' && isTouchingRef.current) {
         const touchCurrentY = e.touches[0].clientY;
         const deltaY = touchStartY - touchCurrentY;
         setTargetScroll(prev => Math.max(0, Math.min(300, prev + deltaY)));
@@ -73,7 +80,7 @@ function HarmonicsHealing() {
     };
 
     const handleTouchEnd = () => {
-      isTouching = false;
+      isTouchingRef.current = false;
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
