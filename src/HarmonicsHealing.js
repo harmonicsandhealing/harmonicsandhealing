@@ -10,7 +10,6 @@ function HarmonicsHealing() {
   const [bgImage, setBgImage] = useState(healingBg);
   const [bgOpacity, setBgOpacity] = useState(1);
   const [fadeOverlay, setFadeOverlay] = useState(0);
-  const [modalScroll, setModalScroll] = useState(0);
   const modalRef = useRef(null);
 
   const backgroundImages = {
@@ -20,10 +19,12 @@ function HarmonicsHealing() {
   };
 
   const [isAtBottom, setIsAtBottom] = useState(false);
-  const lastScrollRef = useRef(0);
+  const animationFrameRef = useRef(null);
   const velocityRef = useRef(0);
+  const modalScrollRef = useRef(0);
+  const lastScrollRef = useRef(0);
 
-  // Handle modal scroll to detect when at bottom
+  // Detect when modal is at bottom
   useEffect(() => {
     if (!modalRef.current || !activeModal) return;
 
@@ -37,10 +38,6 @@ function HarmonicsHealing() {
       const atBottom = scrollY >= maxScroll - 10;
       setIsAtBottom(atBottom);
 
-      if (!atBottom) {
-        setModalScroll(0);
-      }
-
       lastScrollRef.current = scrollY;
     };
 
@@ -49,15 +46,36 @@ function HarmonicsHealing() {
     return () => modal.removeEventListener('scroll', handleScroll);
   }, [activeModal]);
 
-  // Handle wheel events on window level for parallax effect anywhere on page
+  // Smooth parallax animation using requestAnimationFrame
   useEffect(() => {
-    if (!activeModal || !isAtBottom) return;
+    if (!activeModal || !modalRef.current) return;
+
+    const animate = () => {
+      const modal = modalRef.current;
+      if (!modal) return;
+
+      // Apply transform with GPU acceleration
+      modal.style.transform = `translateY(-${modalScrollRef.current}px)`;
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [activeModal]);
+
+  // Handle wheel events for parallax
+  useEffect(() => {
+    if (!activeModal || !isAtBottom || !modalRef.current) return;
 
     const handleWindowWheel = (e) => {
       const modal = modalRef.current;
       if (!modal) return;
 
-      // Only trigger if modal is at bottom
       const scrollHeight = modal.scrollHeight;
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
@@ -65,16 +83,17 @@ function HarmonicsHealing() {
 
       if (atMaxScroll && e.deltaY > 0) {
         e.preventDefault();
-        const newParallax = modalScroll + e.deltaY * 0.5;
-        setModalScroll(newParallax);
+        
+        const newParallax = modalScrollRef.current + e.deltaY * 0.5;
+        modalScrollRef.current = newParallax;
         velocityRef.current = e.deltaY;
 
         // Close when slid up enough
-        if (newParallax > clientHeight) {
+        if (newParallax > clientHeight * 0.5) {
           setFadeOverlay(1);
           setTimeout(() => {
             setActiveModal(null);
-            setModalScroll(0);
+            modalScrollRef.current = 0;
             setIsAtBottom(false);
             setTimeout(() => setFadeOverlay(0), 50);
           }, 250);
@@ -84,24 +103,27 @@ function HarmonicsHealing() {
 
     window.addEventListener('wheel', handleWindowWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWindowWheel);
-  }, [activeModal, isAtBottom, modalScroll]);
+  }, [activeModal, isAtBottom]);
 
-  // Handle touch events for iPhone
+  // Handle touch events for mobile/iPhone
   useEffect(() => {
     if (!modalRef.current || !activeModal) return;
 
     let touchStartY = 0;
     let lastTouchY = 0;
+    let touchVelocity = 0;
 
     const handleTouchStart = (e) => {
       touchStartY = e.touches[0].clientY;
       lastTouchY = e.touches[0].clientY;
+      touchVelocity = 0;
     };
 
     const handleTouchMove = (e) => {
       const currentY = e.touches[0].clientY;
       const deltaY = lastTouchY - currentY;
       lastTouchY = currentY;
+      touchVelocity = deltaY;
 
       if (!isAtBottom) return;
 
@@ -113,16 +135,16 @@ function HarmonicsHealing() {
 
       if (atMaxScroll && deltaY > 0) {
         e.preventDefault();
-        const newParallax = modalScroll + deltaY * 1.5;
-        setModalScroll(newParallax);
+        const newParallax = modalScrollRef.current + deltaY * 1.5;
+        modalScrollRef.current = newParallax;
         velocityRef.current = deltaY;
 
         // Close when slid up enough
-        if (newParallax > clientHeight) {
+        if (newParallax > clientHeight * 0.5) {
           setFadeOverlay(1);
           setTimeout(() => {
             setActiveModal(null);
-            setModalScroll(0);
+            modalScrollRef.current = 0;
             setIsAtBottom(false);
             setTimeout(() => setFadeOverlay(0), 50);
           }, 250);
@@ -133,11 +155,12 @@ function HarmonicsHealing() {
     const modal = modalRef.current;
     modal.addEventListener('touchstart', handleTouchStart, { passive: true });
     modal.addEventListener('touchmove', handleTouchMove, { passive: false });
+
     return () => {
       modal.removeEventListener('touchstart', handleTouchStart);
       modal.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [activeModal, isAtBottom, modalScroll]);
+  }, [activeModal, isAtBottom]);
 
   const openModal = (section) => {
     setMenuOpen(false);
@@ -149,6 +172,8 @@ function HarmonicsHealing() {
       if (modalRef.current) {
         modalRef.current.scrollTop = 0;
       }
+      modalScrollRef.current = 0;
+      setIsAtBottom(false);
       setTimeout(() => setFadeOverlay(0), 50);
     }, 250);
   };
@@ -167,7 +192,7 @@ function HarmonicsHealing() {
   };
 
   return (
-    <div>
+    <div style={{ willChange: 'contents' }}>
       {/* Fade Overlay */}
       <div style={{
         position: 'fixed',
@@ -195,7 +220,8 @@ function HarmonicsHealing() {
         backgroundAttachment: 'fixed',
         opacity: bgOpacity,
         transition: 'opacity 0.3s ease',
-        zIndex: 0
+        zIndex: 0,
+        willChange: 'opacity'
       }}></div>
 
       {/* Logo */}
@@ -209,7 +235,8 @@ function HarmonicsHealing() {
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
-        zIndex: 2000
+        zIndex: 2000,
+        pointerEvents: 'none'
       }}></div>
 
       {/* Hamburger Menu */}
@@ -225,11 +252,12 @@ function HarmonicsHealing() {
             cursor: 'pointer', 
             display: 'flex', 
             flexDirection: 'column', 
-            gap: '5px'
+            gap: '5px',
+            willChange: 'transform'
           }}>
-          <span style={{ width: '30px', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(45deg) translate(6px, 6px)' : 'none' }}></span>
-          <span style={{ width: '30px', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', opacity: menuOpen ? 0 : 1 }}></span>
-          <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none' }}></span>
+          <span style={{ width: '30px', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(45deg) translate(6px, 6px)' : 'none', willChange: 'transform' }}></span>
+          <span style={{ width: '30px', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', opacity: menuOpen ? 0 : 1, willChange: 'opacity' }}></span>
+          <span style={{ width: '100%', height: '2px', backgroundColor: 'white', transition: 'all 0.3s', transform: menuOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none', willChange: 'transform' }}></span>
         </div>
       </div>
 
@@ -285,7 +313,8 @@ function HarmonicsHealing() {
                 textTransform: 'uppercase',
                 cursor: 'pointer',
                 transition: 'all 0.3s',
-                padding: 0
+                padding: 0,
+                willChange: 'color'
               }}
             >
               Healing Sessions...
@@ -302,7 +331,8 @@ function HarmonicsHealing() {
                 textTransform: 'uppercase',
                 cursor: 'pointer',
                 transition: 'all 0.3s',
-                padding: 0
+                padding: 0,
+                willChange: 'color'
               }}
             >
               Gong Bath
@@ -319,7 +349,8 @@ function HarmonicsHealing() {
                 textTransform: 'uppercase',
                 cursor: 'pointer',
                 transition: 'all 0.3s',
-                padding: 0
+                padding: 0,
+                willChange: 'color'
               }}
             >
               About
@@ -340,11 +371,16 @@ function HarmonicsHealing() {
             height: '100vh',
             backgroundColor: '#fff',
             overflowY: 'auto',
+            overflowX: 'hidden',
             zIndex: 100,
             opacity: 1,
             animation: 'fadeIn 0.4s ease-out forwards',
-            transform: `translateY(-${modalScroll * 1}px)`,
-            transition: 'transform 0.05s linear'
+            transform: 'translateY(0px)',
+            transition: 'transform 0.05s linear',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            perspective: 1000,
+            transformOrigin: 'center top'
           }}
         >
           <style>{`
@@ -364,10 +400,10 @@ function HarmonicsHealing() {
               {/* Healing Modal */}
               {activeModal === 'healing' && (
                 <>
-                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/healing/tuning-fork-2.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
+                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/healing/tuning-fork-2.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px', willChange: 'auto' }}></div>
                   <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
                     <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>Healing Sessions</h2>
-                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intention—one through the flow of universal life force, the other through the resonance of sound within the energy field.</p>
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Reiki and Aura Tuning are gentle yet profound pathways to restore energetic harmony and inner peace. Each works through vibration and intentionâ€"one through the flow of universal life force, the other through the resonance of sound within the energy field.</p>
                     <h3 style={{ fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Aura Tuning</h3>
                     <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Aura Tuning works with the subtle field that surrounds and connects us, using the resonance of tuning forks to identify and clear energetic imprints from the past.</p>
                     <h3 style={{ fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Reiki</h3>
@@ -388,7 +424,7 @@ function HarmonicsHealing() {
                   <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
                     <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>Gong Bath</h2>
                     <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', textAlign: 'justify' }}>Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit.</p>
-                    <p style={{ fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '1rem' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." — Don Conreaux</p>
+                    <p style={{ fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '1rem' }}>"Concentrate on a tone, and in it you may discover the secret of 'being' and find 'the inner voice' of the Self." â€" Don Conreaux</p>
                     <button 
                       onClick={() => window.open('https://wa.me/+1234567890', '_blank')}
                       style={{ padding: '0.75rem 1.5rem', backgroundColor: '#000', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '1px' }}
@@ -396,14 +432,14 @@ function HarmonicsHealing() {
                       Contact Me
                     </button>
                   </div>
-                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/gong/gong_bath.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
+                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/gong/gong_bath.jpg').default})`, backgroundSize: 'cover', borderRadius: '10px', willChange: 'auto' }}></div>
                 </>
               )}
 
               {/* About Modal */}
               {activeModal === 'about' && (
                 <>
-                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/about/about.jpeg').default})`, backgroundSize: 'cover', borderRadius: '10px' }}></div>
+                  <div style={{ flex: 1, minWidth: '300px', height: '400px', backgroundImage: `url(${require('./assets/about/about.jpeg').default})`, backgroundSize: 'cover', borderRadius: '10px', willChange: 'auto' }}></div>
                   <div style={{ flex: 1, minWidth: '300px', color: '#000' }}>
                     <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', letterSpacing: '2px' }}>About</h2>
                     <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem' }}>Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.</p>
