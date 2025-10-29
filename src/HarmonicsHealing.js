@@ -21,40 +21,33 @@ function HarmonicsHealing() {
   };
 
   const [isAtBottom, setIsAtBottom] = useState(false);
-  const touchStartY = useRef(0);
-  const lastTouchY = useRef(0);
-  const touchVelocity = useRef(0);
-  const wheelAccumulator = useRef(0);
+  const touchStartYRef = useRef(0);
+  const lastTouchYRef = useRef(0);
+  const touchVelocityRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const startModalScrollRef = useRef(0);
 
-  // Prevent pull-to-refresh on mobile
+  // Prevent body scroll and pull-to-refresh on iOS
   useEffect(() => {
-    let lastY = 0;
-
-    const preventPullToRefresh = (e) => {
-      const currentY = e.touches[0].clientY;
-      const scrollingUp = currentY > lastY;
-      const atTop = window.pageYOffset === 0;
-      
-      if (scrollingUp && atTop) {
+    const preventDefault = (e) => {
+      if (e.cancelable) {
         e.preventDefault();
       }
-      
-      lastY = currentY;
     };
 
-    const handleTouchStart = (e) => {
-      lastY = e.touches[0].clientY;
-    };
-
-    document.body.addEventListener('touchstart', handleTouchStart, { passive: false });
-    document.body.addEventListener('touchmove', preventPullToRefresh, { passive: false });
-    
+    // Prevent default touch behavior on body
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.overflow = 'hidden';
     document.body.style.overscrollBehavior = 'none';
     document.documentElement.style.overscrollBehavior = 'none';
-    
+
     return () => {
-      document.body.removeEventListener('touchstart', handleTouchStart);
-      document.body.removeEventListener('touchmove', preventPullToRefresh);
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.overflow = '';
       document.body.style.overscrollBehavior = '';
       document.documentElement.style.overscrollBehavior = '';
     };
@@ -73,197 +66,157 @@ function HarmonicsHealing() {
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
 
-      const atBottom = scrollY >= maxScroll - 10;
+      const atBottom = scrollY >= maxScroll - 5;
       setIsAtBottom(atBottom);
 
-      if (!atBottom) {
+      if (!atBottom && !isDraggingRef.current) {
         setModalScroll(0);
-        wheelAccumulator.current = 0;
       }
     };
 
     const modal = modalRef.current;
     modal.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
     
     return () => {
-      // Store modal ref in variable to use in cleanup
-      const modalElement = modal;
-      if (modalElement) {
-        modalElement.removeEventListener('scroll', handleScroll);
+      if (modal) {
+        modal.removeEventListener('scroll', handleScroll);
       }
     };
   }, [activeModal]);
 
-  // Handle wheel events for Mac trackpad
+  // Touch events for mobile - simplified and more reliable
   useEffect(() => {
-    if (!activeModal) return;
+    if (!activeModal || !modalRef.current) return;
 
-    let animationFrame = null;
+    let startY = 0;
+    let currentY = 0;
+    let startTime = 0;
 
-    const handleWheel = (e) => {
+    const handleTouchStart = (e) => {
       if (menuOpen) return;
-      
+
       const modal = modalRef.current;
       if (!modal) return;
 
       const scrollHeight = modal.scrollHeight;
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
-      const currentScroll = modal.scrollTop;
-      const atBottom = currentScroll >= maxScroll - 10;
+      const atMaxScroll = modal.scrollTop >= maxScroll - 5;
 
-      // Only trigger parallax when at bottom and scrolling down
-      if (atBottom && e.deltaY > 0) {
-        e.preventDefault();
-        
-        if (animationFrame) {
-          cancelAnimationFrame(animationFrame);
-        }
-
-        // Accumulate wheel delta for smoother animation
-        wheelAccumulator.current += e.deltaY;
-
-        animationFrame = requestAnimationFrame(() => {
-          const newParallax = modalScroll + wheelAccumulator.current * 0.5;
-          setModalScroll(Math.min(newParallax, clientHeight));
-          
-          // Visual feedback
-          if (newParallax > clientHeight * 0.3) {
-            const fadeProgress = (newParallax - clientHeight * 0.3) / (clientHeight * 0.2);
-            setFadeOverlay(Math.min(fadeProgress * 0.5, 0.5));
-          }
-          
-          // Close when scrolled enough
-          if (newParallax > clientHeight * 0.4) {
-            closeModal();
-          }
-          
-          wheelAccumulator.current = 0;
-        });
-      } else if (modalScroll > 0 && e.deltaY < 0) {
-        // Allow scrolling back to reduce parallax
-        e.preventDefault();
-        const newParallax = Math.max(0, modalScroll + e.deltaY * 0.5);
-        setModalScroll(newParallax);
-        if (newParallax < clientHeight * 0.3) {
-          setFadeOverlay(0);
-        }
+      // Only start drag if at bottom
+      if (atMaxScroll) {
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        touchStartYRef.current = startY;
+        lastTouchYRef.current = startY;
+        startModalScrollRef.current = modalScroll;
+        startTime = Date.now();
+        isDraggingRef.current = false;
       }
-    };
-
-    // Add wheel listener to window for global handling
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    
-    return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-      window.removeEventListener('wheel', handleWheel);
-    };
-  }, [activeModal, modalScroll, menuOpen]);
-
-  // Touch events for mobile
-  useEffect(() => {
-    if (!activeModal) return;
-
-    let startY = 0;
-    let currentY = 0;
-    let startModalScroll = 0;
-    let isDragging = false;
-
-    const handleTouchStart = (e) => {
-      if (menuOpen) return;
-      
-      startY = e.touches[0].clientY;
-      currentY = startY;
-      touchStartY.current = startY;
-      lastTouchY.current = startY;
-      startModalScroll = modalScroll;
-      isDragging = false;
-      touchVelocity.current = 0;
     };
 
     const handleTouchMove = (e) => {
       if (menuOpen) return;
-      
-      currentY = e.touches[0].clientY;
-      const deltaY = lastTouchY.current - currentY;
-      touchVelocity.current = deltaY;
-      lastTouchY.current = currentY;
 
       const modal = modalRef.current;
       if (!modal) return;
 
+      currentY = e.touches[0].clientY;
+      const deltaY = lastTouchYRef.current - currentY;
+      const totalDelta = touchStartYRef.current - currentY;
+      
+      touchVelocityRef.current = deltaY;
+      lastTouchYRef.current = currentY;
+
       const scrollHeight = modal.scrollHeight;
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
-      const currentScroll = modal.scrollTop;
-      const atMaxScroll = currentScroll >= maxScroll - 10;
+      const atMaxScroll = modal.scrollTop >= maxScroll - 5;
 
-      // If at bottom of modal, start parallax
-      if (atMaxScroll && deltaY > 0) {
+      // Start parallax when at bottom and swiping up
+      if (atMaxScroll && totalDelta > 0) {
         e.preventDefault();
-        isDragging = true;
-        const swipeDistance = startY - currentY;
-        const newParallax = Math.max(0, swipeDistance * 0.8);
-        setModalScroll(Math.min(newParallax, clientHeight));
+        isDraggingRef.current = true;
+        
+        const swipeDistance = totalDelta;
+        const resistance = 0.6; // Add resistance for more natural feel
+        const newParallax = Math.max(0, swipeDistance * resistance);
+        setModalScroll(Math.min(newParallax, clientHeight * 1.2));
 
         // Visual feedback
-        if (newParallax > clientHeight * 0.3) {
-          const fadeProgress = (newParallax - clientHeight * 0.3) / (clientHeight * 0.2);
-          setFadeOverlay(Math.min(fadeProgress * 0.5, 0.5));
+        if (newParallax > clientHeight * 0.2) {
+          const fadeProgress = (newParallax - clientHeight * 0.2) / (clientHeight * 0.3);
+          setFadeOverlay(Math.min(fadeProgress * 0.4, 0.4));
+        } else {
+          setFadeOverlay(0);
         }
-      } 
-      // Allow pulling back down if parallax is active
-      else if (modalScroll > 0) {
+      }
+      // Allow pulling back down
+      else if (modalScroll > 0 && totalDelta < 0) {
         e.preventDefault();
-        isDragging = true;
-        const swipeDistance = startY - currentY;
-        const newParallax = Math.max(0, startModalScroll + swipeDistance * 0.8);
-        setModalScroll(Math.min(newParallax, clientHeight));
+        const swipeDistance = totalDelta;
+        const newParallax = Math.max(0, startModalScrollRef.current + swipeDistance * 0.6);
+        setModalScroll(newParallax);
         
-        if (newParallax < clientHeight * 0.3) {
+        if (newParallax < clientHeight * 0.2) {
           setFadeOverlay(0);
         }
       }
     };
 
     const handleTouchEnd = () => {
-      if (menuOpen) return;
-      
+      if (menuOpen || !isDraggingRef.current) {
+        isDraggingRef.current = false;
+        return;
+      }
+
       const modal = modalRef.current;
       if (!modal) return;
 
       const clientHeight = modal.clientHeight;
-      
-      // Check if we should close
-      const shouldClose = (modalScroll > clientHeight * 0.35) || 
-                         (modalScroll > clientHeight * 0.2 && touchVelocity.current > 10);
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      const distance = touchStartYRef.current - currentY;
+      const velocity = duration > 0 ? distance / duration : 0;
 
-      if (shouldClose && isDragging) {
+      // Close if:
+      // 1. Dragged far enough (40% of screen)
+      // 2. Quick swipe up (high velocity)
+      const shouldClose = 
+        modalScroll > clientHeight * 0.4 || 
+        (modalScroll > clientHeight * 0.25 && velocity > 0.5);
+
+      if (shouldClose) {
         closeModal();
       } else if (modalScroll > 0) {
+        // Animate back to resting position
         animateScrollBack();
       }
       
-      isDragging = false;
+      isDraggingRef.current = false;
     };
 
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    const modal = modalRef.current;
+    modal.addEventListener('touchstart', handleTouchStart, { passive: true });
+    modal.addEventListener('touchmove', handleTouchMove, { passive: false });
+    modal.addEventListener('touchend', handleTouchEnd, { passive: true });
+    modal.addEventListener('touchcancel', handleTouchEnd, { passive: true });
     
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
+      if (modal) {
+        modal.removeEventListener('touchstart', handleTouchStart);
+        modal.removeEventListener('touchmove', handleTouchMove);
+        modal.removeEventListener('touchend', handleTouchEnd);
+        modal.removeEventListener('touchcancel', handleTouchEnd);
+      }
     };
   }, [activeModal, modalScroll, menuOpen]);
 
   const animateScrollBack = () => {
     const startTime = performance.now();
     const startScroll = modalScroll;
-    const duration = 300;
+    const duration = 250;
 
     const animate = (currentTime) => {
       const elapsed = currentTime - startTime;
@@ -276,8 +229,6 @@ function HarmonicsHealing() {
 
       if (progress < 1) {
         requestAnimationFrame(animate);
-      } else {
-        wheelAccumulator.current = 0;
       }
     };
 
@@ -289,35 +240,39 @@ function HarmonicsHealing() {
     setIsClosing(true);
     
     const modal = modalRef.current;
-    if (modal) {
-      const clientHeight = modal.clientHeight;
-      const start = modalScroll;
-      const startTime = performance.now();
-      const duration = 400;
+    if (!modal) return;
 
-      const animate = (currentTime) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const currentScroll = start + (clientHeight - start) * easeOut;
-        
-        setModalScroll(currentScroll);
-        setFadeOverlay(progress * 0.5);
+    const clientHeight = modal.clientHeight;
+    const start = modalScroll;
+    const startTime = performance.now();
+    const duration = 350;
 
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeInOut = progress < 0.5 
+        ? 4 * progress * progress * progress 
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      
+      const currentScroll = start + (clientHeight - start) * easeInOut;
+      setModalScroll(currentScroll);
+      setFadeOverlay(progress * 0.5);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setTimeout(() => {
           setActiveModal(null);
           setModalScroll(0);
           setIsAtBottom(false);
           setIsClosing(false);
           setFadeOverlay(0);
-          wheelAccumulator.current = 0;
-        }
-      };
+          isDraggingRef.current = false;
+        }, 50);
+      }
+    };
 
-      requestAnimationFrame(animate);
-    }
+    requestAnimationFrame(animate);
   };
 
   const openModal = (section) => {
@@ -327,13 +282,12 @@ function HarmonicsHealing() {
     setTimeout(() => {
       setActiveModal(section);
       setBgImage(backgroundImages[section]);
+      setModalScroll(0);
       if (modalRef.current) {
         modalRef.current.scrollTop = 0;
       }
-      setModalScroll(0);
-      wheelAccumulator.current = 0;
-      setTimeout(() => setFadeOverlay(0), 50);
-    }, 300);
+      setTimeout(() => setFadeOverlay(0), 100);
+    }, 250);
   };
 
   const handleImageChange = (newImage) => {
@@ -352,10 +306,14 @@ function HarmonicsHealing() {
   return (
     <div style={{ 
       backgroundColor: '#000', 
-      minHeight: '100vh', 
-      position: 'relative',
-      overscrollBehavior: 'none',
-      WebkitOverflowScrolling: 'touch'
+      height: '100vh',
+      width: '100vw',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      overflow: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'none'
     }}>
       {/* Fade Overlay */}
       <div style={{
@@ -414,31 +372,29 @@ function HarmonicsHealing() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '2rem',
+        padding: '1.5rem',
         zIndex: 2000,
         background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 100%)'
       }}>
         {/* Logo */}
         <div 
           style={{
-            width: '50px',
-            height: '50px',
+            width: '45px',
+            height: '45px',
             backgroundImage: `url(${logo})`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
             opacity: 0.95,
-            transition: 'transform 0.3s ease',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           onClick={() => {
             if (activeModal) closeModal();
           }}
         ></div>
 
-        {/* Catchphrase */}
+        {/* Catchphrase - hide on small screens */}
         <div style={{
           position: 'absolute',
           left: '50%',
@@ -446,10 +402,11 @@ function HarmonicsHealing() {
           textAlign: 'center',
           opacity: activeModal ? 0 : 1,
           transition: 'opacity 0.5s ease',
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          display: window.innerWidth < 768 ? 'none' : 'block'
         }}>
           <p style={{
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             color: 'white',
             letterSpacing: '2px',
             textTransform: 'uppercase',
@@ -465,7 +422,7 @@ function HarmonicsHealing() {
             opacity: 0.4
           }}></div>
           <p style={{
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             color: 'white',
             letterSpacing: '2px',
             textTransform: 'uppercase',
@@ -484,7 +441,7 @@ function HarmonicsHealing() {
             flexDirection: 'column', 
             gap: '6px',
             padding: '10px',
-            transition: 'all 0.3s'
+            WebkitTapHighlightColor: 'transparent'
           }}>
           <span style={{ 
             width: '25px', 
@@ -547,10 +504,9 @@ function HarmonicsHealing() {
                fontWeight: '300',
                textTransform: 'uppercase',
                transition: 'all 0.3s',
-               opacity: 0.8
+               opacity: 0.8,
+               WebkitTapHighlightColor: 'transparent'
              }}
-             onMouseEnter={(e) => e.target.style.opacity = '1'}
-             onMouseLeave={(e) => e.target.style.opacity = '0.8'}
           >Instagram</a>
           <a href="https://www.facebook.com/profile.php?id=61581215911617" 
              target="_blank" 
@@ -563,10 +519,9 @@ function HarmonicsHealing() {
                fontWeight: '300',
                textTransform: 'uppercase',
                transition: 'all 0.3s',
-               opacity: 0.8
+               opacity: 0.8,
+               WebkitTapHighlightColor: 'transparent'
              }}
-             onMouseEnter={(e) => e.target.style.opacity = '1'}
-             onMouseLeave={(e) => e.target.style.opacity = '0.8'}
           >Facebook</a>
           <a href="https://calendly.com/harmonicsandhealingny" 
              target="_blank" 
@@ -579,10 +534,9 @@ function HarmonicsHealing() {
                fontWeight: '300',
                textTransform: 'uppercase',
                transition: 'all 0.3s',
-               opacity: 0.8
+               opacity: 0.8,
+               WebkitTapHighlightColor: 'transparent'
              }}
-             onMouseEnter={(e) => e.target.style.opacity = '1'}
-             onMouseLeave={(e) => e.target.style.opacity = '0.8'}
           >Book Session</a>
           <button 
              onClick={() => { setMenuOpen(false); openModal('about'); }} 
@@ -598,10 +552,9 @@ function HarmonicsHealing() {
                transition: 'all 0.3s',
                opacity: 0.8,
                padding: 0,
-               fontFamily: 'inherit'
+               fontFamily: 'inherit',
+               WebkitTapHighlightColor: 'transparent'
              }}
-             onMouseEnter={(e) => e.target.style.opacity = '1'}
-             onMouseLeave={(e) => e.target.style.opacity = '0.8'}
           >About</button>
         </div>
       </div>
@@ -618,7 +571,8 @@ function HarmonicsHealing() {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          zIndex: 10
+          zIndex: 10,
+          padding: '0 1rem'
         }}>
           {/* Main Title */}
           <div style={{
@@ -627,27 +581,27 @@ function HarmonicsHealing() {
             marginBottom: '3rem'
           }}>
             <h1 style={{
-              fontSize: 'clamp(3rem, 7vw, 5rem)',
+              fontSize: 'clamp(2.5rem, 10vw, 5rem)',
               color: 'white',
               fontWeight: '200',
-              letterSpacing: '10px',
+              letterSpacing: 'clamp(5px, 2vw, 10px)',
               textTransform: 'uppercase',
               marginBottom: '1rem',
               opacity: 0.95,
               fontFamily: "'Cormorant Garamond', serif"
             }}>Harmonics</h1>
             <div style={{
-              width: '100px',
+              width: 'clamp(60px, 15vw, 100px)',
               height: '1px',
               backgroundColor: 'white',
               margin: '0 auto',
               opacity: 0.4
             }}></div>
             <h2 style={{
-              fontSize: 'clamp(1rem, 2.5vw, 1.2rem)',
+              fontSize: 'clamp(0.9rem, 3vw, 1.2rem)',
               color: 'white',
               fontWeight: '300',
-              letterSpacing: '5px',
+              letterSpacing: 'clamp(3px, 1vw, 5px)',
               textTransform: 'uppercase',
               marginTop: '1rem',
               opacity: 0.8
@@ -659,17 +613,19 @@ function HarmonicsHealing() {
             display: 'flex', 
             flexDirection: 'column', 
             gap: '2rem', 
-            alignItems: 'center'
-          }} onMouseLeave={handleMouseLeave}>
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '600px'
+          }}>
             <button 
               onClick={() => openModal('healing')}
               onMouseEnter={() => handleImageChange(backgroundImages.healing)}
               style={{ 
-                fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)',
+                fontSize: 'clamp(1.3rem, 5vw, 2.2rem)',
                 color: 'white',
                 background: 'none',
                 border: 'none',
-                letterSpacing: '3px',
+                letterSpacing: 'clamp(2px, 0.5vw, 3px)',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -677,43 +633,23 @@ function HarmonicsHealing() {
                 fontWeight: '300',
                 position: 'relative',
                 opacity: 0.85,
-                fontFamily: 'inherit'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.letterSpacing = '5px';
-                const underline = e.currentTarget.querySelector('.underline');
-                if (underline) underline.style.width = '100%';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.opacity = '0.85';
-                e.currentTarget.style.letterSpacing = '3px';
-                const underline = e.currentTarget.querySelector('.underline');
-                if (underline) underline.style.width = '0';
+                fontFamily: 'inherit',
+                WebkitTapHighlightColor: 'transparent',
+                width: '100%',
+                textAlign: 'center'
               }}
             >
               Healing Sessions
-              <div className="underline" style={{
-                position: 'absolute',
-                bottom: '0',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '0',
-                height: '1px',
-                backgroundColor: 'white',
-                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                opacity: 0.6
-              }}></div>
             </button>
             <button 
               onClick={() => openModal('gong')}
               onMouseEnter={() => handleImageChange(backgroundImages.gong)}
               style={{ 
-                fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)',
+                fontSize: 'clamp(1.3rem, 5vw, 2.2rem)',
                 color: 'white',
                 background: 'none',
                 border: 'none',
-                letterSpacing: '3px',
+                letterSpacing: 'clamp(2px, 0.5vw, 3px)',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -721,43 +657,23 @@ function HarmonicsHealing() {
                 fontWeight: '300',
                 position: 'relative',
                 opacity: 0.85,
-                fontFamily: 'inherit'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.letterSpacing = '5px';
-                const underline = e.currentTarget.querySelector('.underline');
-                if (underline) underline.style.width = '100%';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.opacity = '0.85';
-                e.currentTarget.style.letterSpacing = '3px';
-                const underline = e.currentTarget.querySelector('.underline');
-                if (underline) underline.style.width = '0';
+                fontFamily: 'inherit',
+                WebkitTapHighlightColor: 'transparent',
+                width: '100%',
+                textAlign: 'center'
               }}
             >
               Gong Bath
-              <div className="underline" style={{
-                position: 'absolute',
-                bottom: '0',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '0',
-                height: '1px',
-                backgroundColor: 'white',
-                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                opacity: 0.6
-              }}></div>
             </button>
             <button 
               onClick={() => openModal('about')}
               onMouseEnter={() => handleImageChange(backgroundImages.about)}
               style={{ 
-                fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)',
+                fontSize: 'clamp(1.3rem, 5vw, 2.2rem)',
                 color: 'white',
                 background: 'none',
                 border: 'none',
-                letterSpacing: '3px',
+                letterSpacing: 'clamp(2px, 0.5vw, 3px)',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -765,39 +681,19 @@ function HarmonicsHealing() {
                 fontWeight: '300',
                 position: 'relative',
                 opacity: 0.85,
-                fontFamily: 'inherit'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.letterSpacing = '5px';
-                const underline = e.currentTarget.querySelector('.underline');
-                if (underline) underline.style.width = '100%';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.opacity = '0.85';
-                e.currentTarget.style.letterSpacing = '3px';
-                const underline = e.currentTarget.querySelector('.underline');
-                if (underline) underline.style.width = '0';
+                fontFamily: 'inherit',
+                WebkitTapHighlightColor: 'transparent',
+                width: '100%',
+                textAlign: 'center'
               }}
             >
               About
-              <div className="underline" style={{
-                position: 'absolute',
-                bottom: '0',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '0',
-                height: '1px',
-                backgroundColor: 'white',
-                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                opacity: 0.6
-              }}></div>
             </button>
           </div>
         </div>
       )}
 
-      {/* Modal with Fade In and Parallax Close */}
+      {/* Modal with Touch-Optimized Close */}
       {activeModal && (
         <div 
           ref={modalRef}
@@ -817,7 +713,7 @@ function HarmonicsHealing() {
             transition: isClosing ? 'none' : 'opacity 0.5s ease',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
-            touchAction: modalScroll > 0 ? 'none' : 'auto'
+            touchAction: 'pan-y'
           }}
         >
           <style>{`
@@ -838,7 +734,7 @@ function HarmonicsHealing() {
           `}</style>
 
           <div style={{ 
-            padding: '120px 2rem 3rem', 
+            padding: '100px 1.5rem 3rem', 
             minHeight: '100vh',
             background: 'linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%)'
           }}>
@@ -851,12 +747,12 @@ function HarmonicsHealing() {
               {activeModal === 'healing' && (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                  gap: '3rem',
+                  gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(auto-fit, minmax(350px, 1fr))',
+                  gap: '2.5rem',
                   alignItems: 'center'
                 }}>
                   <div style={{ 
-                    height: '450px', 
+                    height: window.innerWidth < 768 ? '300px' : '450px',
                     backgroundImage: `url(${healingBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
@@ -870,7 +766,7 @@ function HarmonicsHealing() {
                     padding: '1rem'
                   }}>
                     <h2 style={{ 
-                      fontSize: 'clamp(2rem, 4vw, 2.5rem)', 
+                      fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', 
                       marginBottom: '2rem', 
                       letterSpacing: '1px',
                       fontWeight: '300',
@@ -878,7 +774,7 @@ function HarmonicsHealing() {
                       fontFamily: "'Cormorant Garamond', serif"
                     }}>Healing Sessions</h2>
                     <p style={{ 
-                      fontSize: '1rem', 
+                      fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
                       lineHeight: 1.8, 
                       marginBottom: '1.5rem',
                       color: '#444'
@@ -892,14 +788,14 @@ function HarmonicsHealing() {
                       borderTop: '1px solid #ddd'
                     }}>
                       <h3 style={{ 
-                        fontSize: '1.2rem', 
+                        fontSize: 'clamp(1rem, 3vw, 1.2rem)', 
                         marginBottom: '1rem',
                         fontWeight: '400',
                         letterSpacing: '0.5px',
                         color: '#111'
                       }}>Aura Tuning</h3>
                       <p style={{ 
-                        fontSize: '0.95rem', 
+                        fontSize: 'clamp(0.85rem, 2vw, 0.95rem)', 
                         lineHeight: 1.7, 
                         marginBottom: '2rem',
                         color: '#555'
@@ -908,14 +804,14 @@ function HarmonicsHealing() {
                       </p>
                       
                       <h3 style={{ 
-                        fontSize: '1.2rem', 
+                        fontSize: 'clamp(1rem, 3vw, 1.2rem)', 
                         marginBottom: '1rem',
                         fontWeight: '400',
                         letterSpacing: '0.5px',
                         color: '#111'
                       }}>Reiki</h3>
                       <p style={{ 
-                        fontSize: '0.95rem', 
+                        fontSize: 'clamp(0.85rem, 2vw, 0.95rem)', 
                         lineHeight: 1.7, 
                         marginBottom: '2rem',
                         color: '#555'
@@ -937,15 +833,10 @@ function HarmonicsHealing() {
                         letterSpacing: '2px',
                         textTransform: 'uppercase',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        fontWeight: '300'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#111';
-                        e.target.style.color = '#fff';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'transparent';
-                        e.target.style.color = '#111';
+                        fontWeight: '300',
+                        WebkitTapHighlightColor: 'transparent',
+                        width: '100%',
+                        maxWidth: '250px'
                       }}
                     >
                       Book Session
@@ -958,18 +849,18 @@ function HarmonicsHealing() {
               {activeModal === 'gong' && (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                  gap: '3rem',
+                  gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(auto-fit, minmax(350px, 1fr))',
+                  gap: '2.5rem',
                   alignItems: 'center'
                 }}>
                   <div style={{ 
                     color: '#111',
                     animation: 'fadeInUp 0.8s ease-out 0.2s both',
                     padding: '1rem',
-                    order: 1
+                    order: window.innerWidth < 768 ? 2 : 1
                   }}>
                     <h2 style={{ 
-                      fontSize: 'clamp(2rem, 4vw, 2.5rem)', 
+                      fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', 
                       marginBottom: '2rem', 
                       letterSpacing: '1px',
                       fontWeight: '300',
@@ -977,7 +868,7 @@ function HarmonicsHealing() {
                       fontFamily: "'Cormorant Garamond', serif"
                     }}>Gong Bath</h2>
                     <p style={{ 
-                      fontSize: '1rem', 
+                      fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
                       lineHeight: 1.8, 
                       marginBottom: '2rem',
                       color: '#444'
@@ -985,7 +876,7 @@ function HarmonicsHealing() {
                       Immerse yourself in a sacred Gong Bath, where the resonant vibrations of the gong wash over the body, mind, and spirit, creating a profound meditative experience.
                     </p>
                     <blockquote style={{ 
-                      fontSize: '1.1rem', 
+                      fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)', 
                       fontStyle: 'italic', 
                       marginBottom: '2rem',
                       paddingLeft: '1.5rem',
@@ -996,7 +887,7 @@ function HarmonicsHealing() {
                       <cite style={{ 
                         display: 'block', 
                         marginTop: '1rem',
-                        fontSize: '0.9rem',
+                        fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
                         fontStyle: 'normal',
                         color: '#888'
                       }}>— Don Conreaux</cite>
@@ -1014,29 +905,24 @@ function HarmonicsHealing() {
                         letterSpacing: '2px',
                         textTransform: 'uppercase',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        fontWeight: '300'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#111';
-                        e.target.style.color = '#fff';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'transparent';
-                        e.target.style.color = '#111';
+                        fontWeight: '300',
+                        WebkitTapHighlightColor: 'transparent',
+                        width: '100%',
+                        maxWidth: '250px'
                       }}
                     >
                       Inquire
                     </button>
                   </div>
                   <div style={{ 
-                    height: '450px', 
+                    height: window.innerWidth < 768 ? '300px' : '450px',
                     backgroundImage: `url(${gongBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     borderRadius: '2px',
                     boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
                     animation: 'fadeInUp 0.8s ease-out 0.3s both',
-                    order: 2
+                    order: window.innerWidth < 768 ? 1 : 2
                   }}></div>
                 </div>
               )}
@@ -1045,12 +931,12 @@ function HarmonicsHealing() {
               {activeModal === 'about' && (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                  gap: '3rem',
+                  gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(auto-fit, minmax(350px, 1fr))',
+                  gap: '2.5rem',
                   alignItems: 'center'
                 }}>
                   <div style={{ 
-                    height: '450px', 
+                    height: window.innerWidth < 768 ? '300px' : '450px',
                     backgroundImage: `url(${aboutBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
@@ -1064,7 +950,7 @@ function HarmonicsHealing() {
                     padding: '1rem'
                   }}>
                     <h2 style={{ 
-                      fontSize: 'clamp(2rem, 4vw, 2.5rem)', 
+                      fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', 
                       marginBottom: '2rem', 
                       letterSpacing: '1px',
                       fontWeight: '300',
@@ -1072,7 +958,7 @@ function HarmonicsHealing() {
                       fontFamily: "'Cormorant Garamond', serif"
                     }}>About</h2>
                     <p style={{ 
-                      fontSize: '1rem', 
+                      fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
                       lineHeight: 1.8, 
                       marginBottom: '1.5rem',
                       color: '#444'
@@ -1080,7 +966,7 @@ function HarmonicsHealing() {
                       Harmonics and Healing was founded on the belief that sound and energy are powerful tools for transformation. Our practitioners are dedicated to creating sacred spaces where healing can occur naturally and deeply.
                     </p>
                     <p style={{ 
-                      fontSize: '1rem', 
+                      fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
                       lineHeight: 1.8, 
                       marginBottom: '2rem',
                       color: '#444'
@@ -1100,15 +986,10 @@ function HarmonicsHealing() {
                         letterSpacing: '2px',
                         textTransform: 'uppercase',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        fontWeight: '300'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#111';
-                        e.target.style.color = '#fff';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'transparent';
-                        e.target.style.color = '#111';
+                        fontWeight: '300',
+                        WebkitTapHighlightColor: 'transparent',
+                        width: '100%',
+                        maxWidth: '250px'
                       }}
                     >
                       Contact
@@ -1123,18 +1004,18 @@ function HarmonicsHealing() {
               <div style={{
                 textAlign: 'center',
                 marginTop: '4rem',
-                paddingBottom: '2rem',
+                paddingBottom: '3rem',
                 opacity: isAtBottom ? 0.8 : 0.3,
                 transition: 'opacity 0.5s ease',
                 animation: 'fadeInUp 0.8s ease-out 0.5s both'
               }}>
                 <p style={{
-                  fontSize: '0.75rem',
+                  fontSize: '0.7rem',
                   color: '#888',
                   letterSpacing: '1.5px',
                   textTransform: 'uppercase'
                 }}>
-                  {isAtBottom ? 'Scroll down or swipe up to close' : 'Scroll for more'}
+                  {isAtBottom ? 'Swipe up to close' : 'Scroll for more'}
                 </p>
                 <div style={{
                   width: '1px',
