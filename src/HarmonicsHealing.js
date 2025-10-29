@@ -342,6 +342,9 @@ function HarmonicsHealing() {
       const startTime = performance.now();
       const distance = target - start;
       const duration = 280;
+      const modal = modalRef.current;
+      if (!modal) return;
+      const clientHeight = modal.clientHeight;
 
       const animate = (currentTime) => {
         const elapsed = currentTime - startTime;
