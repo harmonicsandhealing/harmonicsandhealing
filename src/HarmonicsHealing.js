@@ -154,13 +154,16 @@ function HarmonicsHealing() {
     };
   }, [activeModal, modalScroll, menuOpen]);
 
-  // Touch events for mobile - with cumulative scroll support
+  // Touch events for mobile - smooth and natural physics
   useEffect(() => {
     if (!activeModal || !modalRef.current || !isTouchDevice.current) return;
 
-    let startY = 0;
-    let currentY = 0;
-    let startTime = 0;
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let touchStartTime = 0;
+    let lastTouchY = 0;
+    let lastTouchTime = 0;
+    let velocity = 0;
 
     const handleTouchStart = (e) => {
       if (menuOpen) return;
@@ -174,19 +177,20 @@ function HarmonicsHealing() {
       const atMaxScroll = modal.scrollTop >= maxScroll - 5;
 
       const now = Date.now();
-      // Reset cumulative scroll if it's been more than 500ms since last swipe
-      if (now - lastSwipeTimeRef.current > 500) {
+      
+      // Reset cumulative scroll if it's been more than 800ms since last interaction
+      if (now - lastSwipeTimeRef.current > 800) {
         cumulativeScrollRef.current = 0;
       }
 
-      // Only start drag if at bottom
-      if (atMaxScroll) {
-        startY = e.touches[0].clientY;
-        currentY = startY;
-        touchStartYRef.current = startY;
-        lastTouchYRef.current = startY;
+      if (atMaxScroll || cumulativeScrollRef.current > 0) {
+        touchStartY = e.touches[0].clientY;
+        touchCurrentY = touchStartY;
+        lastTouchY = touchStartY;
+        touchStartTime = now;
+        lastTouchTime = now;
         startModalScrollRef.current = cumulativeScrollRef.current;
-        startTime = now;
+        velocity = 0;
         isDraggingRef.current = false;
       }
     };
@@ -197,56 +201,63 @@ function HarmonicsHealing() {
       const modal = modalRef.current;
       if (!modal) return;
 
-      currentY = e.touches[0].clientY;
-      const deltaY = lastTouchYRef.current - currentY;
-      const totalDelta = touchStartYRef.current - currentY;
+      touchCurrentY = e.touches[0].clientY;
+      const now = Date.now();
+      const timeDelta = now - lastTouchTime;
       
-      touchVelocityRef.current = deltaY;
-      lastTouchYRef.current = currentY;
+      if (timeDelta > 0) {
+        velocity = (lastTouchY - touchCurrentY) / timeDelta;
+      }
+      
+      lastTouchY = touchCurrentY;
+      lastTouchTime = now;
 
       const scrollHeight = modal.scrollHeight;
       const clientHeight = modal.clientHeight;
       const maxScroll = scrollHeight - clientHeight;
       const atMaxScroll = modal.scrollTop >= maxScroll - 5;
 
-      // Start parallax when at bottom and swiping up
-      if (atMaxScroll && totalDelta > 0) {
-        e.preventDefault();
-        isDraggingRef.current = true;
-        lastSwipeTimeRef.current = Date.now();
-        
-        const swipeDistance = totalDelta;
-        const resistance = 0.7; // Slightly more responsive
-        // Add to cumulative scroll from previous swipes
-        const newParallax = Math.max(0, startModalScrollRef.current + (swipeDistance * resistance));
-        cumulativeScrollRef.current = newParallax;
-        setModalScroll(Math.min(newParallax, clientHeight * 1.2));
+      const totalMovement = touchStartY - touchCurrentY;
 
-        // Visual feedback - starts earlier for better UX
-        if (newParallax > clientHeight * 0.15) {
-          const fadeProgress = (newParallax - clientHeight * 0.15) / (clientHeight * 0.25);
-          setFadeOverlay(Math.min(fadeProgress * 0.4, 0.4));
-        } else {
-          setFadeOverlay(0);
-        }
-      }
-      // Allow pulling back down
-      else if (cumulativeScrollRef.current > 0 && totalDelta < 0) {
-        e.preventDefault();
-        lastSwipeTimeRef.current = Date.now();
-        const swipeDistance = totalDelta;
-        const newParallax = Math.max(0, startModalScrollRef.current + swipeDistance * 0.7);
-        cumulativeScrollRef.current = newParallax;
-        setModalScroll(newParallax);
+      // Start parallax when at bottom or already in parallax mode
+      if ((atMaxScroll || cumulativeScrollRef.current > 0) && totalMovement > -50) {
         
-        if (newParallax < clientHeight * 0.15) {
+        // Only prevent default if we're actually moving up or already in parallax
+        if (totalMovement > 0 || cumulativeScrollRef.current > 0) {
+          e.preventDefault();
+          isDraggingRef.current = true;
+          lastSwipeTimeRef.current = now;
+        }
+        
+        // Calculate new position with smooth resistance curve
+        let newScroll;
+        if (totalMovement > 0) {
+          // Swiping up - add to cumulative
+          const resistance = 0.85; // More responsive
+          newScroll = startModalScrollRef.current + (totalMovement * resistance);
+        } else {
+          // Pulling back down
+          const pullResistance = 0.6; // Easier to pull back
+          newScroll = startModalScrollRef.current + (totalMovement * pullResistance);
+        }
+        
+        newScroll = Math.max(0, Math.min(newScroll, clientHeight * 1.5));
+        cumulativeScrollRef.current = newScroll;
+        setModalScroll(newScroll);
+
+        // Smooth visual feedback with progressive opacity
+        const threshold = clientHeight * 0.12;
+        if (newScroll > threshold) {
+          const fadeProgress = (newScroll - threshold) / (clientHeight * 0.28);
+          setFadeOverlay(Math.min(fadeProgress * 0.35, 0.35));
+        } else {
           setFadeOverlay(0);
         }
       }
     };
 
     const handleTouchEnd = () => {
-      if (menuOpen || !isDraggingRef.current) {
+      if (menuOpen) {
         isDraggingRef.current = false;
         return;
       }
@@ -255,27 +266,110 @@ function HarmonicsHealing() {
       if (!modal) return;
 
       const clientHeight = modal.clientHeight;
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-      const distance = touchStartYRef.current - currentY;
-      const velocity = duration > 0 ? distance / duration : 0;
+      const totalMovement = touchStartY - touchCurrentY;
+      const touchDuration = Date.now() - touchStartTime;
+      
+      // Calculate final velocity
+      const finalVelocity = touchDuration > 0 ? totalMovement / touchDuration : 0;
 
-      // Close if:
-      // 1. Dragged far enough (30% of screen - reduced threshold)
-      // 2. Quick swipe up (high velocity)
+      // More forgiving close conditions
+      const scrollProgress = cumulativeScrollRef.current / clientHeight;
+      const hasStrongVelocity = finalVelocity > 0.4; // Lower threshold
+      const hasGoodProgress = scrollProgress > 0.25; // Lower threshold
+      const hasExcellentProgress = scrollProgress > 0.35;
+
       const shouldClose = 
-        cumulativeScrollRef.current > clientHeight * 0.3 || 
-        (cumulativeScrollRef.current > clientHeight * 0.2 && velocity > 0.5);
+        hasExcellentProgress || 
+        (hasGoodProgress && hasStrongVelocity) ||
+        (scrollProgress > 0.15 && finalVelocity > 0.6); // Quick flick
 
       if (shouldClose) {
-        closeModal();
-        cumulativeScrollRef.current = 0;
+        // Animate close with momentum
+        animateClose(cumulativeScrollRef.current, clientHeight, finalVelocity);
       } else if (cumulativeScrollRef.current > 0) {
-        // Keep cumulative scroll for next swipe - don't reset!
-        // This allows multiple small swipes to add up
+        // Spring back smoothly but keep progress if > 8%
+        if (scrollProgress < 0.08) {
+          animateSpringBack(cumulativeScrollRef.current, 0);
+        } else {
+          // Keep some progress for next swipe
+          const keepProgress = cumulativeScrollRef.current * 0.7;
+          animateSpringBack(cumulativeScrollRef.current, keepProgress);
+        }
       }
       
       isDraggingRef.current = false;
+    };
+
+    const animateClose = (start, target, velocity) => {
+      const startTime = performance.now();
+      const distance = target - start;
+      const baseDuration = 320;
+      const velocityBoost = Math.min(Math.abs(velocity) * 150, 100);
+      const duration = Math.max(baseDuration - velocityBoost, 200);
+
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Smooth ease-out with slight bounce feel
+        const easeOut = 1 - Math.pow(1 - progress, 2.5);
+        const currentScroll = start + (distance * easeOut);
+        
+        cumulativeScrollRef.current = currentScroll;
+        setModalScroll(currentScroll);
+        setFadeOverlay(progress * 0.5);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // Actually close the modal
+          setTimeout(() => {
+            setActiveModal(null);
+            setModalScroll(0);
+            setIsAtBottom(false);
+            setIsClosing(false);
+            setFadeOverlay(0);
+            cumulativeScrollRef.current = 0;
+          }, 50);
+        }
+      };
+
+      setIsClosing(true);
+      requestAnimationFrame(animate);
+    };
+
+    const animateSpringBack = (start, target) => {
+      const startTime = performance.now();
+      const distance = target - start;
+      const duration = 280;
+
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Spring-like ease out
+        const spring = 1 - Math.pow(1 - progress, 3);
+        const currentScroll = start + (distance * spring);
+        
+        cumulativeScrollRef.current = currentScroll;
+        setModalScroll(currentScroll);
+        
+        // Fade out overlay smoothly
+        if (currentScroll < clientHeight * 0.12) {
+          setFadeOverlay(0);
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          cumulativeScrollRef.current = target;
+          if (target === 0) {
+            setFadeOverlay(0);
+          }
+        }
+      };
+
+      requestAnimationFrame(animate);
     };
 
     const modal = modalRef.current;
@@ -292,31 +386,7 @@ function HarmonicsHealing() {
         modal.removeEventListener('touchcancel', handleTouchEnd);
       }
     };
-  }, [activeModal, modalScroll, menuOpen]);
-
-  const animateScrollBack = () => {
-    const startTime = performance.now();
-    const startScroll = modalScroll;
-    const duration = 250;
-
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentScroll = startScroll * (1 - easeOut);
-      
-      setModalScroll(currentScroll);
-      setFadeOverlay(0);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        wheelAccumulatorRef.current = 0;
-      }
-    };
-
-    requestAnimationFrame(animate);
-  };
+  }, [activeModal, menuOpen]);
 
   const closeModal = () => {
     if (isClosing) return;
@@ -845,10 +915,11 @@ function HarmonicsHealing() {
             opacity: isClosing ? 1 - (modalScroll / (modalRef.current?.clientHeight || 1000)) : 1,
             animation: !isClosing ? 'fadeIn 0.5s ease-out forwards' : 'none',
             transform: `translateY(-${modalScroll}px)`,
-            transition: isClosing ? 'none' : 'opacity 0.5s ease',
+            transition: isDraggingRef.current ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
-            touchAction: isTouchDevice.current ? 'pan-y' : 'auto'
+            touchAction: isTouchDevice.current ? 'pan-y' : 'auto',
+            willChange: 'transform'
           }}
         >
           <style>{`
