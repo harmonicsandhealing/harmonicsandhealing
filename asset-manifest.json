@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "/harmonicsandhealing/static/css/main.b4029ffb.css",
-    "main.js": "/harmonicsandhealing/static/js/main.e2a6f08f.js",
+    "main.js": "/harmonicsandhealing/static/js/main.80346361.js",
     "static/media/tuning-fork-2.jpg": "/harmonicsandhealing/static/media/tuning-fork-2.dccc7a424476ad3a3c6a.jpg",
     "static/media/about.jpeg": "/harmonicsandhealing/static/media/about.f532a19caf7c2966e8c9.jpeg",
     "static/media/logo.jpg": "/harmonicsandhealing/static/media/logo.7a06c4443459c8e96cee.jpg",
     "static/media/gong_bath.jpg": "/harmonicsandhealing/static/media/gong_bath.553b6e744634e144c4ad.jpg",
     "index.html": "/harmonicsandhealing/index.html",
     "main.b4029ffb.css.map": "/harmonicsandhealing/static/css/main.b4029ffb.css.map",
-    "main.e2a6f08f.js.map": "/harmonicsandhealing/static/js/main.e2a6f08f.js.map"
+    "main.80346361.js.map": "/harmonicsandhealing/static/js/main.80346361.js.map"
   },
   "entrypoints": [
     "static/css/main.b4029ffb.css",
-    "static/js/main.e2a6f08f.js"
+    "static/js/main.80346361.js"
   ]
 }
