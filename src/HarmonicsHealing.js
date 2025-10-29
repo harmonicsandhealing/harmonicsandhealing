@@ -26,16 +26,13 @@ function HarmonicsHealing() {
   const touchVelocityRef = useRef(0);
   const isDraggingRef = useRef(false);
   const startModalScrollRef = useRef(0);
+  const wheelAccumulatorRef = useRef(0);
+  const isTouchDevice = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-  // Prevent body scroll and pull-to-refresh on iOS
+  // Prevent pull-to-refresh on mobile only
   useEffect(() => {
-    const preventDefault = (e) => {
-      if (e.cancelable) {
-        e.preventDefault();
-      }
-    };
+    if (!isTouchDevice.current) return;
 
-    // Prevent default touch behavior on body
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
     document.body.style.height = '100%';
@@ -71,6 +68,7 @@ function HarmonicsHealing() {
 
       if (!atBottom && !isDraggingRef.current) {
         setModalScroll(0);
+        wheelAccumulatorRef.current = 0;
       }
     };
 
@@ -85,9 +83,77 @@ function HarmonicsHealing() {
     };
   }, [activeModal]);
 
-  // Touch events for mobile - simplified and more reliable
+  // Wheel events for Mac/Desktop
   useEffect(() => {
-    if (!activeModal || !modalRef.current) return;
+    if (!activeModal || isTouchDevice.current) return;
+
+    let animationFrame = null;
+
+    const handleWheel = (e) => {
+      if (menuOpen) return;
+      
+      const modal = modalRef.current;
+      if (!modal) return;
+
+      const scrollHeight = modal.scrollHeight;
+      const clientHeight = modal.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      const currentScroll = modal.scrollTop;
+      const atBottom = currentScroll >= maxScroll - 10;
+
+      // Only trigger parallax when at bottom and scrolling down
+      if (atBottom && e.deltaY > 0) {
+        e.preventDefault();
+        
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+
+        // Accumulate wheel delta for smoother animation
+        wheelAccumulatorRef.current += e.deltaY;
+
+        animationFrame = requestAnimationFrame(() => {
+          const newParallax = modalScroll + wheelAccumulatorRef.current * 0.5;
+          setModalScroll(Math.min(newParallax, clientHeight));
+          
+          // Visual feedback
+          if (newParallax > clientHeight * 0.3) {
+            const fadeProgress = (newParallax - clientHeight * 0.3) / (clientHeight * 0.2);
+            setFadeOverlay(Math.min(fadeProgress * 0.5, 0.5));
+          }
+          
+          // Close when scrolled enough
+          if (newParallax > clientHeight * 0.4) {
+            closeModal();
+          }
+          
+          wheelAccumulatorRef.current = 0;
+        });
+      } else if (modalScroll > 0 && e.deltaY < 0) {
+        // Allow scrolling back to reduce parallax
+        e.preventDefault();
+        const newParallax = Math.max(0, modalScroll + e.deltaY * 0.5);
+        setModalScroll(newParallax);
+        if (newParallax < clientHeight * 0.3) {
+          setFadeOverlay(0);
+        }
+      }
+    };
+
+    // Add wheel listener to window for global handling
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [activeModal, modalScroll, menuOpen]);
+
+  // Touch events for mobile
+  useEffect(() => {
+    if (!activeModal || !modalRef.current || !isTouchDevice.current) return;
 
     let startY = 0;
     let currentY = 0;
@@ -229,6 +295,8 @@ function HarmonicsHealing() {
 
       if (progress < 1) {
         requestAnimationFrame(animate);
+      } else {
+        wheelAccumulatorRef.current = 0;
       }
     };
 
@@ -268,6 +336,7 @@ function HarmonicsHealing() {
           setIsClosing(false);
           setFadeOverlay(0);
           isDraggingRef.current = false;
+          wheelAccumulatorRef.current = 0;
         }, 50);
       }
     };
@@ -283,6 +352,7 @@ function HarmonicsHealing() {
       setActiveModal(section);
       setBgImage(backgroundImages[section]);
       setModalScroll(0);
+      wheelAccumulatorRef.current = 0;
       if (modalRef.current) {
         modalRef.current.scrollTop = 0;
       }
@@ -291,7 +361,7 @@ function HarmonicsHealing() {
   };
 
   const handleImageChange = (newImage) => {
-    if (newImage === bgImage) return;
+    if (newImage === bgImage || isTouchDevice.current) return;
     setBgOpacity(0);
     setTimeout(() => {
       setBgImage(newImage);
@@ -300,15 +370,16 @@ function HarmonicsHealing() {
   };
 
   const handleMouseLeave = () => {
+    if (isTouchDevice.current) return;
     setBgImage(healingBg);
   };
 
   return (
     <div style={{ 
       backgroundColor: '#000', 
-      height: '100vh',
-      width: '100vw',
-      position: 'fixed',
+      minHeight: '100vh',
+      width: '100%',
+      position: isTouchDevice.current ? 'fixed' : 'relative',
       top: 0,
       left: 0,
       overflow: 'hidden',
@@ -372,29 +443,32 @@ function HarmonicsHealing() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '1.5rem',
+        padding: isTouchDevice.current ? '1.5rem' : '2rem',
         zIndex: 2000,
         background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 100%)'
       }}>
         {/* Logo */}
         <div 
           style={{
-            width: '45px',
-            height: '45px',
+            width: isTouchDevice.current ? '45px' : '50px',
+            height: isTouchDevice.current ? '45px' : '50px',
             backgroundImage: `url(${logo})`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
             opacity: 0.95,
+            transition: 'transform 0.3s ease',
             cursor: 'pointer',
             WebkitTapHighlightColor: 'transparent'
           }}
+          onMouseEnter={(e) => !isTouchDevice.current && (e.currentTarget.style.transform = 'scale(1.05)')}
+          onMouseLeave={(e) => !isTouchDevice.current && (e.currentTarget.style.transform = 'scale(1)')}
           onClick={() => {
             if (activeModal) closeModal();
           }}
         ></div>
 
-        {/* Catchphrase - hide on small screens */}
+        {/* Catchphrase */}
         <div style={{
           position: 'absolute',
           left: '50%',
@@ -507,6 +581,8 @@ function HarmonicsHealing() {
                opacity: 0.8,
                WebkitTapHighlightColor: 'transparent'
              }}
+             onMouseEnter={(e) => !isTouchDevice.current && (e.target.style.opacity = '1')}
+             onMouseLeave={(e) => !isTouchDevice.current && (e.target.style.opacity = '0.8')}
           >Instagram</a>
           <a href="https://www.facebook.com/profile.php?id=61581215911617" 
              target="_blank" 
@@ -522,6 +598,8 @@ function HarmonicsHealing() {
                opacity: 0.8,
                WebkitTapHighlightColor: 'transparent'
              }}
+             onMouseEnter={(e) => !isTouchDevice.current && (e.target.style.opacity = '1')}
+             onMouseLeave={(e) => !isTouchDevice.current && (e.target.style.opacity = '0.8')}
           >Facebook</a>
           <a href="https://calendly.com/harmonicsandhealingny" 
              target="_blank" 
@@ -537,6 +615,8 @@ function HarmonicsHealing() {
                opacity: 0.8,
                WebkitTapHighlightColor: 'transparent'
              }}
+             onMouseEnter={(e) => !isTouchDevice.current && (e.target.style.opacity = '1')}
+             onMouseLeave={(e) => !isTouchDevice.current && (e.target.style.opacity = '0.8')}
           >Book Session</a>
           <button 
              onClick={() => { setMenuOpen(false); openModal('about'); }} 
@@ -555,6 +635,8 @@ function HarmonicsHealing() {
                fontFamily: 'inherit',
                WebkitTapHighlightColor: 'transparent'
              }}
+             onMouseEnter={(e) => !isTouchDevice.current && (e.target.style.opacity = '1')}
+             onMouseLeave={(e) => !isTouchDevice.current && (e.target.style.opacity = '0.8')}
           >About</button>
         </div>
       </div>
@@ -616,7 +698,7 @@ function HarmonicsHealing() {
             alignItems: 'center',
             width: '100%',
             maxWidth: '600px'
-          }}>
+          }} onMouseLeave={handleMouseLeave}>
             <button 
               onClick={() => openModal('healing')}
               onMouseEnter={() => handleImageChange(backgroundImages.healing)}
@@ -635,8 +717,20 @@ function HarmonicsHealing() {
                 opacity: 0.85,
                 fontFamily: 'inherit',
                 WebkitTapHighlightColor: 'transparent',
-                width: '100%',
+                width: isTouchDevice.current ? '100%' : 'auto',
                 textAlign: 'center'
+              }}
+              onMouseOver={(e) => {
+                if (!isTouchDevice.current) {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.letterSpacing = '5px';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!isTouchDevice.current) {
+                  e.currentTarget.style.opacity = '0.85';
+                  e.currentTarget.style.letterSpacing = '3px';
+                }
               }}
             >
               Healing Sessions
@@ -659,8 +753,20 @@ function HarmonicsHealing() {
                 opacity: 0.85,
                 fontFamily: 'inherit',
                 WebkitTapHighlightColor: 'transparent',
-                width: '100%',
+                width: isTouchDevice.current ? '100%' : 'auto',
                 textAlign: 'center'
+              }}
+              onMouseOver={(e) => {
+                if (!isTouchDevice.current) {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.letterSpacing = '5px';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!isTouchDevice.current) {
+                  e.currentTarget.style.opacity = '0.85';
+                  e.currentTarget.style.letterSpacing = '3px';
+                }
               }}
             >
               Gong Bath
@@ -683,8 +789,20 @@ function HarmonicsHealing() {
                 opacity: 0.85,
                 fontFamily: 'inherit',
                 WebkitTapHighlightColor: 'transparent',
-                width: '100%',
+                width: isTouchDevice.current ? '100%' : 'auto',
                 textAlign: 'center'
+              }}
+              onMouseOver={(e) => {
+                if (!isTouchDevice.current) {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.letterSpacing = '5px';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!isTouchDevice.current) {
+                  e.currentTarget.style.opacity = '0.85';
+                  e.currentTarget.style.letterSpacing = '3px';
+                }
               }}
             >
               About
@@ -693,7 +811,7 @@ function HarmonicsHealing() {
         </div>
       )}
 
-      {/* Modal with Touch-Optimized Close */}
+      {/* Modal with Universal Close Gesture */}
       {activeModal && (
         <div 
           ref={modalRef}
@@ -713,7 +831,7 @@ function HarmonicsHealing() {
             transition: isClosing ? 'none' : 'opacity 0.5s ease',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
-            touchAction: 'pan-y'
+            touchAction: isTouchDevice.current ? 'pan-y' : 'auto'
           }}
         >
           <style>{`
@@ -835,8 +953,20 @@ function HarmonicsHealing() {
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         fontWeight: '300',
                         WebkitTapHighlightColor: 'transparent',
-                        width: '100%',
-                        maxWidth: '250px'
+                        width: isTouchDevice.current ? '100%' : 'auto',
+                        maxWidth: isTouchDevice.current ? '100%' : '250px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isTouchDevice.current) {
+                          e.target.style.backgroundColor = '#111';
+                          e.target.style.color = '#fff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isTouchDevice.current) {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = '#111';
+                        }
                       }}
                     >
                       Book Session
@@ -907,8 +1037,20 @@ function HarmonicsHealing() {
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         fontWeight: '300',
                         WebkitTapHighlightColor: 'transparent',
-                        width: '100%',
-                        maxWidth: '250px'
+                        width: isTouchDevice.current ? '100%' : 'auto',
+                        maxWidth: isTouchDevice.current ? '100%' : '250px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isTouchDevice.current) {
+                          e.target.style.backgroundColor = '#111';
+                          e.target.style.color = '#fff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isTouchDevice.current) {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = '#111';
+                        }
                       }}
                     >
                       Inquire
@@ -988,8 +1130,20 @@ function HarmonicsHealing() {
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         fontWeight: '300',
                         WebkitTapHighlightColor: 'transparent',
-                        width: '100%',
-                        maxWidth: '250px'
+                        width: isTouchDevice.current ? '100%' : 'auto',
+                        maxWidth: isTouchDevice.current ? '100%' : '250px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isTouchDevice.current) {
+                          e.target.style.backgroundColor = '#111';
+                          e.target.style.color = '#fff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isTouchDevice.current) {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = '#111';
+                        }
                       }}
                     >
                       Contact
@@ -1015,7 +1169,7 @@ function HarmonicsHealing() {
                   letterSpacing: '1.5px',
                   textTransform: 'uppercase'
                 }}>
-                  {isAtBottom ? 'Swipe up to close' : 'Scroll for more'}
+                  {isAtBottom ? (isTouchDevice.current ? 'Swipe up to close' : 'Scroll down to close') : 'Scroll for more'}
                 </p>
                 <div style={{
                   width: '1px',
